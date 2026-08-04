@@ -1,5 +1,6 @@
 """Stage 2 tests for the required CLI commands."""
 
+import shutil
 from pathlib import Path
 
 import pandas as pd
@@ -96,6 +97,43 @@ def test_aggregate_and_plot_complete_the_pipeline(tmp_path, tiny_config, capsys)
     assert main(["plot", "--run", str(run_dir)]) == 0
     assert list((run_dir / "figures").glob("*.png"))
     assert str(run_dir) in capsys.readouterr().out
+
+
+def test_plot_accepts_repeat_timing_runs_and_rejects_mismatched_ones(tmp_path, tiny_config, capsys):
+    main(["run", "--config", str(tiny_config), "--artifacts", str(tmp_path), "--run-id", "r1"])
+    run_dir = tmp_path / "r1"
+    main(["aggregate", "--run", str(run_dir)])
+    repeat = tmp_path / "r2"
+    shutil.copytree(run_dir, repeat)
+
+    assert main(["plot", "--run", str(run_dir), "--timing-run", str(repeat)]) == 0
+    assert (run_dir / "figures" / "optimization_quality_vs_time.png").is_file()
+
+    frame = pd.read_csv(repeat / "raw_results.csv")
+    frame.loc[0, "output_two_qubit_depth"] += 1
+    frame.to_csv(repeat / "raw_results.csv", index=False, na_rep="")
+
+    assert main(["plot", "--run", str(run_dir), "--timing-run", str(repeat)]) != 0
+    assert "does not reproduce" in capsys.readouterr().err
+
+
+def test_plot_reads_a_run_collected_before_planned_point_id(tmp_path, tiny_config, capsys):
+    main(["run", "--config", str(tiny_config), "--artifacts", str(tmp_path), "--run-id", "r1"])
+    run_dir = tmp_path / "r1"
+    main(["aggregate", "--run", str(run_dir)])
+    legacy = tmp_path / "legacy"
+    shutil.copytree(run_dir, legacy)
+    frame = pd.read_csv(legacy / "raw_results.csv")
+    frame.drop(columns=["planned_point_id"]).to_csv(
+        legacy / "raw_results.csv", index=False, na_rep=""
+    )
+    capsys.readouterr()
+
+    assert main(["plot", "--run", str(legacy)]) == 0
+
+    captured = capsys.readouterr()
+    assert "Traceback" not in captured.err
+    assert (legacy / "figures" / "seed_variability.png").is_file()
 
 
 def test_aggregate_exits_nonzero_for_a_missing_run(tmp_path):

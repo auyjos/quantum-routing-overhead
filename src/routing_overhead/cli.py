@@ -36,6 +36,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     plot = subparsers.add_parser("plot", help="draw figures from a run's summary data")
     plot.add_argument("--run", required=True, help="path to a run directory")
+    plot.add_argument(
+        "--timing-run",
+        action="append",
+        default=[],
+        metavar="RUN",
+        help="repeat run directory contributing compilation times (repeatable)",
+    )
     return parser
 
 
@@ -104,7 +111,7 @@ def _aggregate(args) -> int:
 def _plot(args) -> int:
     run_dir = Path(args.run)
     try:
-        figures = plot_run(run_dir)
+        figures = plot_run(run_dir, timing_runs=[Path(path) for path in args.timing_run])
     except (FileNotFoundError, ValueError) as error:
         print(str(error), file=sys.stderr)
         return EXIT_ERROR

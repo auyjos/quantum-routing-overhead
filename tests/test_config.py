@@ -31,21 +31,19 @@ def write_config(tmp_path, **overrides):
     return path
 
 
-def test_shipped_smoke_config_loads():
-    config = load_config(REPO_ROOT / "configs" / "smoke.yaml")
-    assert config.logical_qubits == (4, 8)
-    assert config.circuit_families == ("ghz_chain", "ghz_star")
-    assert config.topologies == ("complete_27", "line_27")
-    assert config.optimization_levels == (1,)
-    assert config.transpiler_seeds == (11, 22)
-    assert config.basis_gates == ("rz", "sx", "x", "cx")
-
-
-def test_shipped_core_config_loads():
-    config = load_config(REPO_ROOT / "configs" / "core.yaml")
-    assert config.logical_qubits == (4, 8, 12, 16, 20, 24)
-    assert len(config.circuit_families) == 4
-    assert len(config.topologies) == 3
+@pytest.mark.parametrize(
+    ("name", "size", "topologies"),
+    [
+        ("smoke.yaml", 16, ("complete_27", "line_27")),
+        ("core.yaml", 1080, ("complete_27", "line_27", "cairo_heavy_hex_27")),
+        ("core-timing-lhc.yaml", 1080, ("line_27", "cairo_heavy_hex_27", "complete_27")),
+        ("core-timing-hcl.yaml", 1080, ("cairo_heavy_hex_27", "complete_27", "line_27")),
+    ],
+)
+def test_shipped_configs_load_with_expected_grid_and_topology_order(name, size, topologies):
+    config = load_config(REPO_ROOT / "configs" / name)
+    assert config.size() == size
+    assert config.topologies == topologies
 
 
 def test_config_is_immutable(tmp_path):

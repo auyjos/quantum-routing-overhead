@@ -74,7 +74,9 @@ def _core_shaped_summary(run_dir, levels=(0, 1, 3), sizes=(4, 8)):
     return run_dir
 
 
-def test_core_shaped_data_draws_one_series_per_topology_and_level(tmp_path, monkeypatch):
+def test_core_shaped_data_draws_one_series_per_constrained_topology_and_level(
+    tmp_path, monkeypatch
+):
     run_dir = _core_shaped_summary(tmp_path / "core")
     calls = []
     real_plot = plt.Axes.plot
@@ -86,15 +88,18 @@ def test_core_shaped_data_draws_one_series_per_topology_and_level(tmp_path, monk
     monkeypatch.setattr(plt.Axes, "plot", record)
     plot_run(run_dir)
 
-    assert len(calls) == 6, calls
+    # Three levels for line_27 only: complete_27 is the ratio's denominator and is
+    # drawn once as a baseline line rather than as three flat series.
+    assert len(calls) == 3, calls
     for xs, _ in calls:
         assert xs == [4, 8], xs
     labels = [label for _, label in calls]
-    assert len(set(labels)) == 6
+    assert len(set(labels)) == 3
+    assert not any("Complete" in label for label in labels)
     assert all("L0" in label or "L1" in label or "L3" in label for label in labels)
 
 
-def test_single_level_data_still_draws_one_series_per_topology(tmp_path, monkeypatch):
+def test_single_level_data_still_draws_the_constrained_series(tmp_path, monkeypatch):
     run_dir = _core_shaped_summary(tmp_path / "smoke-shaped", levels=(1,))
     calls = []
     real_plot = plt.Axes.plot
@@ -105,7 +110,7 @@ def test_single_level_data_still_draws_one_series_per_topology(tmp_path, monkeyp
     )
     plot_run(run_dir)
 
-    assert len(calls) == 2
+    assert len(calls) == 1
     assert all(xs == [4, 8] for xs in calls)
 
 
