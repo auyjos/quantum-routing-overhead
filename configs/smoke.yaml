@@ -1,0 +1,7 @@
+physical_qubits: 27
+logical_qubits: [4, 8]
+circuit_families: [ghz_chain, ghz_star]
+topologies: [complete_27, line_27]
+optimization_levels: [1]
+transpiler_seeds: [11, 22]
+basis_gates: [rz, sx, x, cx]

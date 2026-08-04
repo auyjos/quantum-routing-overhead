@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "routing-overhead"
+version = "0.1.0"
+description = "Controlled benchmark of topology-driven quantum circuit routing overhead."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "matplotlib",
+    "networkx",
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "pyyaml",
+    "qiskit",
+    "qiskit-ibm-runtime",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[project.scripts]
+routing-overhead = "routing_overhead.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
