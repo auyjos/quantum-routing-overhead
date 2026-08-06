@@ -1,0 +1,11 @@
+# Entangled Cartography
+
+Entangled Cartography treats knowledge as a field of routes rather than a stack of boxes. Space is active: wide quiet regions establish confidence, while dense constellations reveal where relationships accumulate. Geometry remains exact but never inert; lines, nodes, and measured intervals create a visual rhythm that feels discovered rather than decorated. Every alignment should appear meticulously crafted through countless rounds of refinement.
+
+Color functions as topology. Deep midnight establishes the stable field, mineral green marks structured connection, and signal orange exposes constraint and friction. Warm paper tones keep the system human and tactile. The palette is deliberately narrow, painstakingly calibrated, and used with the restraint of a master practitioner who understands that a single chromatic shift can carry more meaning than another paragraph.
+
+Scale performs the argument. A few decisive quantities become landmarks, while supporting evidence forms precise, repeatable bands around them. The composition alternates between panoramic systems and close analytical views, creating a pulse of expansion and compression. This rhythm must feel labored over with care: every gap, edge, and transition is the product of deep expertise.
+
+Typography is infrastructural, not ornamental. Large condensed forms anchor the field; quiet grotesque text and monospaced reference marks guide inspection without competing with the visual evidence. Words remain sparse and essential, integrated into the spatial system rather than poured into it. Master-level execution is visible in the hierarchy: nothing overlaps, nothing drifts, and nothing asks to be decoded twice.
+
+Balance comes from controlled asymmetry. A dominant current carries the eye across the surface while smaller evidence chambers create counterweight and pause. The subtle motif is a network whose meaning changes with the path taken through it - repeated marks behave like gates, branches, and constrained passages without becoming literal illustration. The final artifact should feel painstakingly assembled by someone at the top of their field: rigorous enough to inspect, quiet enough to contemplate, and refined enough that its complexity reads as clarity.
