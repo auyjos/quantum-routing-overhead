@@ -44,6 +44,12 @@ baseline; median and IQR summarize the five canonical seed outputs per plotted c
   **1.333-4.870**). On Cairo, chain is **1.000** (IQR **1.000-2.893**, range
   **1.000-5.435**) and star is **3.261** (IQR **2.867-3.838**, range
   **1.000-5.364**). [Figure 4; canonical `raw_results.csv`]
+- The Cairo chain median hides two distinct regimes and must be read stratified: only 61%
+  of those 90 outputs are exactly 1.000. By level the medians are **4.026** at L0,
+  **1.000** at L1, and **1.000** at L3; within L1 and L3 every size from 4 to 20 is
+  **1.000** while n=24 is **2.304**. The L0 row is an identity-layout effect and the n=24
+  column is a graph-forced one; they are not the same finding. [Figure 4; canonical
+  `raw_results.csv`]
 - Higher optimization levels coincide with lower canonical median penalties and higher
   repeat-pooled local compile times. For the line, L0 is **3.904** penalty
   (IQR **1.825-4.292**) at **2.229 ms** (IQR **2.015-2.525**) and L3 is
@@ -56,6 +62,68 @@ baseline; median and IQR summarize the five canonical seed outputs per plotted c
   **31.680-72.148**), versus **4.508 ms** for line and **4.860 ms** for Cairo
   L3. This broad repeated contrast is descriptive; fine line-versus-Cairo timing ranks
   are not claimed. [Figure 5; 3-run timing pool]
+
+## Interpretation
+
+The results compare **interaction-to-coupling compatibility under a chosen layout**. A
+logical circuit defines required interactions, while the coupling map defines which
+physical-qubit pairs can interact directly. Routing is required when the current placement
+does not map an interaction to an allowed edge; another layout may remove an apparent
+mismatch. Gate-count penalty measures the observed added work, while depth penalty measures
+how much remains on the observed critical path after available parallelism.
+
+Two claims here are forced by the coupling graphs and hold independently of any
+transpiler. Cairo's longest simple path is exactly **21 nodes** (exhaustive search, with an
+explicit witness), so no static placement can embed a 24-qubit GHZ chain there without
+remapping. Cairo's simple-cycle lengths are exactly `{12, 20}`, so exact circular
+embeddings are available at those sizes. Under Qiskit 2.5.1, the corresponding observed
+results are a `2.304x` Cairo-chain penalty at L1 and L3 and a `1.000x` circular Efficient
+SU(2) penalty at n=12 and n=20. Those magnitudes, routing heuristics, available parallelism,
+topology rankings, and optimization-level effects could differ under another router or
+release.
+
+**Optimization level 0 is confounded with physical-qubit labeling.** At L0 Qiskit pins the
+initial layout to `TrivialLayout`, the identity permutation. The circuit builders index the
+GHZ chain and circular Efficient SU(2) on `(i, i+1)`, exactly how `CouplingMap.from_line(27)`
+is labeled, while Cairo carries the FakeCairo labeling; at n=24, 23 of 23 chain edges are
+natively satisfied on the line against 9 of 23 on Cairo. L0 is retained as a valid, declared
+Qiskit preset condition and no stored value changes, but that stratum partly measures index
+alignment rather than connectivity, and it carries the study's largest penalties. Excluding
+it, the pooled constrained medians are `2.140x` on line and `2.304x` on Cairo. Optimization
+level 2 was deliberately outside the pre-registered core scope from the start, so all
+comparisons are made within the tested set `{0, 1, 3}`.
+
+The GHZ comparison contrasts interaction shapes. GHZ chain uses
+nearest-neighbor interactions and embeds on the line at every tested size and level,
+producing a `1.000x` penalty. GHZ star requires one logical qubit to interact with every
+other qubit, conflicting with maximum degree 2 on the line and 3 on Cairo. Its roughly
+`3.3x` observed median penalty is consistent with that interaction-shape difference while
+holding the logical task and qubit count fixed.
+
+Circuit families reverse the topology ordering, and the reversal survives without the L0
+stratum. QFT median two-qubit-depth penalty is `2.691x` on line and `3.192x` on Cairo,
+whereas circular Efficient SU(2) is `3.562x` on line and `2.599x` on Cairo; taken level by
+level, QFT stays cheaper on line (`2.819x` L1, `2.155x` L3, against `3.108x` and `2.667x`
+on Cairo) and Efficient SU(2) stays cheaper on Cairo (`2.250x` L1, `2.125x` L3, against
+`3.490x` and `3.344x` on line). The defensible conclusion is not that one sparse topology
+wins, but that hardware connectivity must be evaluated against the workload's interaction
+graph.
+
+Overhead generally grows as more of the device is occupied. Pooling families and levels, the
+line median rises from `1.900x` at 4 logical qubits to `3.367x` at 24; Cairo rises from
+`1.800x` to `3.661x`. Overall two-qubit-count penalties are `2.459x` for line and `2.522x`
+for Cairo. The simultaneous increase in count and depth shows that routing adds operations,
+while their differing ratios show that some of those operations can still be parallelized.
+
+Optimization level changes the result without changing the coupling graph. Across both
+constrained maps, QFT falls from `4.042x` at L0 to `2.223x` at L3, GHZ star from `4.158x`
+to `2.087x`, and Efficient SU(2) from `4.292x` to `2.500x`, and the same levels coincide
+with longer local compile times. This is consistent with the higher presets spending more
+classical effort on layout, cancellation, and routing schedules; the level-to-quality and
+level-to-time associations are observed under Qiskit 2.5.1 rather than established as a
+mechanism here, and part of the L0 end of each range is the identity-layout effect noted
+above. Complete connectivity remains an ideal denominator, not a claim about a real fully
+connected 27-qubit processor. [Figures 2-5; canonical raw and summary results]
 
 ## Figure captions
 
@@ -108,13 +176,13 @@ with lower routing penalties and higher local compilation cost. [Figures 2, 4, a
 
 **Recorded commit:** `a2899b8ef46b41fc7829f3d9e8b106b069f76a39`
 
-### Re-render the distributed accepted artifact bundle
-
-```powershell
-python -m routing_overhead.cli plot --run artifacts/runs/stage3-core-a2899b8e `
-  --timing-run artifacts/runs/stage3-timing-r2-lhc-a2899b8e `
-  --timing-run artifacts/runs/stage3-timing-r3-hcl-a2899b8e
-```
+**Run-data reproducibility is code-only.** The repository includes the poster outputs, but
+`.gitignore` excludes `artifacts/runs/*`, and these three run directories are not published
+as a release, archive, or checksummed bundle. The run identifiers and commit above are the
+provenance record of what produced the numbers on this poster, not a download: reproduction
+means collecting a fresh set with the same configurations and locked dependencies. Routing
+metrics are deterministic and should match exactly; compilation times are machine- and
+process-specific and will not.
 
 ### Collect a fresh three-run timing set
 
