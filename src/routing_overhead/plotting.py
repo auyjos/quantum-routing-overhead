@@ -79,10 +79,13 @@ METRIC_LABELS = {
 
 BASELINE_LABEL = "Complete connectivity (penalty = 1)"
 
-# Line and Cairo land within a fraction of a millisecond of each other at every level, and
-# which of the two sits higher changes between levels, so the labels are separated
-# horizontally — line to the left of its marker, Cairo to the right — rather than
-# vertically, which only works while the vertical order holds.
+# Line and Cairo land within 0.05-0.35 ms of each other at every level, so their markers
+# nearly coincide on the time axis. Their vertical order — the penalty — is what varies:
+# Cairo is above the line at L0 and L3 and below it at L1, so a fixed vertical offset
+# would collide at some level. The labels are therefore separated horizontally, line to
+# the left of its marker and Cairo to the right. This is layout rationale only: Cairo's
+# pooled median is in fact slightly above the line's at all three levels, and no
+# line-versus-Cairo timing rank is claimed anywhere from these margins.
 TIMING_LABEL_OFFSETS = {
     "complete_27": (9, 7),
     "line_27": (-26, -6),
@@ -96,19 +99,21 @@ METRIC_TITLES = {
 
 # A0 poster viewing distance: everything one size up from a paper figure.
 POSTER_STYLE = {
-    "font.size": 12,
-    "axes.titlesize": 14,
-    "axes.labelsize": 13,
-    "xtick.labelsize": 11,
-    "ytick.labelsize": 11,
-    "legend.fontsize": 11,
-    "figure.titlesize": 17,
+    "font.size": 16,
+    "axes.titlesize": 18,
+    "axes.labelsize": 17,
+    "xtick.labelsize": 15,
+    "ytick.labelsize": 15,
+    "legend.fontsize": 15,
+    "figure.titlesize": 21,
     "savefig.bbox": "tight",
 }
 
 TIMING_NOTE = (
-    "Compilation time is a local single-machine measurement, not hardware performance. "
-    "Bars show the interquartile range."
+    "Quality: n=120 canonical observations per topology+level. Time: n=360 observations "
+    "per topology+level across three process runs.\n"
+    "IQRs describe heterogeneous distributions, not independent uncertainty intervals; "
+    "timing is local compiler timing only."
 )
 
 # A repeat may only contribute timing observations if every non-time output it recorded
@@ -224,7 +229,7 @@ def _topology_figure(run_dir: Path, figures_dir: Path) -> list[Path]:
     order = [name for name in TOPOLOGY_LABELS if name in set(frame["topology"])]
     frame = frame.set_index("topology").reindex(order)
 
-    figure, axes = plt.subplots(1, len(frame), figsize=(5.0 * len(frame), 5.4), squeeze=False)
+    figure, axes = plt.subplots(1, len(frame), figsize=(5.0 * len(frame), 6.3), squeeze=False)
     for axis, (name, row) in zip(axes[0], frame.iterrows()):
         edges = [tuple(edge) for edge in json.loads(row["edge_list_json"])]
         graph = nx.Graph()
@@ -253,20 +258,23 @@ def _topology_figure(run_dir: Path, figures_dir: Path) -> list[Path]:
         )
         axis.set_title(
             f"{TOPOLOGY_LABELS.get(name, name)}\n"
-            f"{int(row['undirected_edges'])} couplings · degree "
-            f"{int(row['min_degree'])}–{int(row['max_degree'])} · diameter "
-            f"{int(row['diameter'])}"
+            f"{int(row['undirected_edges'])} couplings\n"
+            f"degree {int(row['min_degree'])}–{int(row['max_degree'])}\n"
+            f"mean degree {float(row['mean_degree']):.2f}\n"
+            f"diameter {int(row['diameter'])} · mean path "
+            f"{float(row['average_shortest_path_length']):.2f}"
         )
         axis.set_axis_off()
     figure.suptitle("Connectivity models compared (saved coupling-map edge lists)")
     figure.text(
         0.5,
         0.02,
-        "Undirected coupling maps only; no calibration or gate-direction data is used.",
+        "All maps connected; undirected coupling maps only. "
+        "No calibration or gate-direction data is used.",
         ha="center",
-        fontsize=11,
+        fontsize=15,
     )
-    figure.tight_layout(rect=(0, 0.05, 1, 1))
+    figure.tight_layout(rect=(0.02, 0.06, 0.99, 0.93))
     return _save(figure, figures_dir, "topology_comparison")
 
 
@@ -280,7 +288,7 @@ def _penalty_figure(summary: pd.DataFrame, metric: str, figures_dir: Path) -> li
 
     families = sorted(data["circuit_family"].unique())
     figure, axes = plt.subplots(
-        1, len(families), figsize=(4.8 * len(families), 4.4), squeeze=False, sharey=True
+        1, len(families), figsize=(4.8 * len(families), 5.6), squeeze=False, sharey=True
     )
     for axis, family in zip(axes[0], families):
         family_data = data[data["circuit_family"] == family]
@@ -311,6 +319,33 @@ def _penalty_figure(summary: pd.DataFrame, metric: str, figures_dir: Path) -> li
                     color=TOPOLOGY_COLORS.get(topology),
                     alpha=0.15,
                 )
+        coincident = []
+        for topology in sorted(family_data["topology"].unique()):
+            curves = {}
+            topology_data = family_data[family_data["topology"] == topology]
+            for level in sorted(topology_data["optimization_level"].unique()):
+                curve = tuple(
+                    topology_data[topology_data["optimization_level"] == level]
+                    .sort_values("logical_qubits")["median"]
+                    .round(12)
+                )
+                curves.setdefault(curve, []).append(level)
+            for levels in curves.values():
+                if len(levels) > 1:
+                    coincident.append(
+                        f"{TOPOLOGY_SHORT.get(topology, topology)} "
+                        + " = ".join(f"L{level}" for level in levels)
+                    )
+        if coincident:
+            axis.text(
+                0.02,
+                0.97,
+                "Coincident medians\n" + "\n".join(coincident),
+                transform=axis.transAxes,
+                va="top",
+                fontsize=15,
+                bbox={"facecolor": "white", "edgecolor": "0.8", "alpha": 0.9},
+            )
         axis.axhline(1.0, color="0.4", linestyle=":", linewidth=1.2, label=BASELINE_LABEL)
         axis.set_title(FAMILY_LABELS.get(family, family))
         axis.set_xlabel("Logical qubits")
@@ -334,10 +369,11 @@ def _ghz_figure(summary: pd.DataFrame, figures_dir: Path) -> list[Path]:
 
     levels = sorted(data["optimization_level"].unique())
     figure, axes = plt.subplots(
-        1, len(levels), figsize=(4.8 * len(levels), 4.6), squeeze=False, sharey=True
+        1, len(levels), figsize=(4.8 * len(levels), 5.8), squeeze=False, sharey=True
     )
     for axis, level in zip(axes[0], levels):
         level_data = data[data["optimization_level"] == level]
+        baseline_matches = []
         for family in GHZ_FAMILIES:
             for topology in sorted(level_data["topology"].unique()):
                 series = level_data[
@@ -360,6 +396,11 @@ def _ghz_figure(summary: pd.DataFrame, figures_dir: Path) -> list[Path]:
                     color=FAMILY_COLORS[family],
                     alpha=0.13,
                 )
+                if series["median"].eq(1.0).all():
+                    baseline_matches.append(
+                        f"{FAMILY_LABELS[family].lower()} on "
+                        f"{TOPOLOGY_SHORT.get(topology, topology)}"
+                    )
         axis.axhline(
             1.0,
             color="0.4",
@@ -371,6 +412,16 @@ def _ghz_figure(summary: pd.DataFrame, figures_dir: Path) -> list[Path]:
         axis.set_xlabel("Logical qubits")
         axis.set_xticks(sorted(level_data["logical_qubits"].unique()))
         axis.grid(alpha=0.3)
+        if baseline_matches:
+            axis.text(
+                0.02,
+                0.97,
+                " · ".join(baseline_matches) + " = complete baseline",
+                transform=axis.transAxes,
+                va="top",
+                fontsize=15,
+                bbox={"facecolor": "white", "edgecolor": "0.8", "alpha": 0.9},
+            )
     _ratio_ylim(axes[0][0], data)
     axes[0][0].set_ylabel(METRIC_LABELS[PRIMARY_METRIC])
     figure.suptitle("Chain-shaped versus star-shaped interaction: routing cost (median, IQR band)")
@@ -392,7 +443,7 @@ def _timing_figure(
     if quality.empty:
         return _skip("optimization_quality_vs_time", f"no {PRIMARY_METRIC} values in raw results")
 
-    figure, axis = plt.subplots(figsize=(9.0, 6.0))
+    figure, axis = plt.subplots(figsize=(11.5, 7.6))
     for topology in [name for name in TOPOLOGY_LABELS if name in set(pooled["topology"])]:
         times, penalties, x_error, y_error, levels = [], [], [[], []], [[], []], []
         for level in sorted(pooled["optimization_level"].unique()):
@@ -434,7 +485,7 @@ def _timing_figure(
     processes = pooled["source_run"].nunique()
     seeds = quality["transpiler_seed"].nunique()
     axis.set_xlabel(
-        f"Pooled median compilation time per transpilation (ms, log scale), "
+        f"Pooled median compilation time per transpilation (ms, log scale)\n"
         f"{processes} process repeats × {seeds} transpiler seeds (crossed)"
     )
     axis.set_ylabel(f"Median {METRIC_LABELS[PRIMARY_METRIC].lower()}")
@@ -444,13 +495,13 @@ def _timing_figure(
     axis.set_xscale("log")
     axis.xaxis.set_major_formatter(ScalarFormatter())
     axis.xaxis.set_minor_formatter(ScalarFormatter())
-    axis.tick_params(axis="x", which="minor", labelsize=9)
+    axis.tick_params(axis="x", which="minor", labelsize=15)
     axis.set_ylim(bottom=0)
     axis.grid(alpha=0.3)
     axis.legend(frameon=False)
     figure.suptitle("Optimization level: output quality against compilation time")
-    figure.text(0.5, 0.005, TIMING_NOTE, ha="center", fontsize=11)
-    figure.tight_layout(rect=(0, 0.05, 1, 1))
+    figure.text(0.5, 0.005, TIMING_NOTE, ha="center", fontsize=15)
+    figure.tight_layout(rect=(0.05, 0.18, 0.99, 0.92))
     return _save(figure, figures_dir, "optimization_quality_vs_time")
 
 
@@ -488,13 +539,23 @@ def _seed_variability_figure(raw: pd.DataFrame | None, figures_dir: Path) -> lis
         )
         colors.append(TOPOLOGY_COLORS.get(cell.topology, "C7"))
 
-    figure, axis = plt.subplots(figsize=(max(8.0, 1.5 * len(series)), 5.6))
+    figure, axis = plt.subplots(figsize=(max(12.0, 1.75 * len(series)), 6.8))
     artists = axis.boxplot(series, patch_artist=True, widths=0.6)
     for patch, color in zip(artists["boxes"], colors):
         patch.set_facecolor(color)
         patch.set_alpha(0.45)
     for median in artists["medians"]:
         median.set_color("black")
+    for position, values in enumerate(series, start=1):
+        if values and all(value == 1.0 for value in values):
+            axis.annotate(
+                f"all {len(values)} seeds = 1.0",
+                (position, 1.0),
+                xytext=(0, 18),
+                textcoords="offset points",
+                ha="center",
+                fontsize=15,
+            )
     axis.set_xticks(range(1, len(labels) + 1))
     axis.set_xticklabels(labels)
     axis.set_ylabel(METRIC_LABELS[PRIMARY_METRIC])
@@ -509,9 +570,9 @@ def _seed_variability_figure(raw: pd.DataFrame | None, figures_dir: Path) -> lis
         f"Each box: {seeds} fixed transpiler seeds for one configuration. "
         "Dotted line marks the complete-connectivity baseline.",
         ha="center",
-        fontsize=11,
+        fontsize=15,
     )
-    figure.tight_layout(rect=(0, 0.05, 1, 1))
+    figure.tight_layout(rect=(0.04, 0.11, 0.99, 0.92))
     return _save(figure, figures_dir, "seed_variability")
 
 
@@ -532,7 +593,7 @@ def _shared_legend(figure, axis) -> None:
     columns = min(3, len(labels)) or 1
     rows = -(-len(labels) // columns)
     figure.legend(handles, labels, loc="lower center", ncol=columns, frameon=False)
-    figure.tight_layout(rect=(0, 0.06 + 0.045 * rows, 1, 1))
+    figure.tight_layout(rect=(0.02, 0.06 + 0.045 * rows, 0.99, 0.93))
 
 
 def _save(figure, figures_dir: Path, name: str) -> list[Path]:

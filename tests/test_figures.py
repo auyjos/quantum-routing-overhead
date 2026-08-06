@@ -3,6 +3,7 @@
 import shutil
 
 import matplotlib.pyplot as plt
+import matplotlib.text as mtext
 import pandas as pd
 import pytest
 
@@ -24,7 +25,7 @@ CONFIG = ExperimentConfig(
     logical_qubits=(4, 6),
     circuit_families=("ghz_chain", "ghz_star"),
     topologies=("complete_27", "line_27"),
-    optimization_levels=(0, 1),
+    optimization_levels=(0, 1, 3),
     transpiler_seeds=(11, 22),
     basis_gates=("rz", "sx", "x", "cx"),
 )
@@ -277,6 +278,82 @@ def test_timing_annotations_offset_line_and_heavy_hex_apart():
     # and their vertical order is not stable across levels.
     assert line[0] < 0 < cairo[0]
     assert abs(cairo[0] - line[0]) >= 30
+
+
+def test_coincident_series_are_disclosed_in_the_figures(core_run, monkeypatch):
+    """Exact overlap must be labelled instead of looking like omitted data."""
+    captured = _captured_figures(monkeypatch)
+    plot_run(core_run)
+
+    for metric in (PRIMARY_METRIC, COUNT_METRIC):
+        chain_axis = next(axis for axis in captured[metric].axes if axis.get_title() == "GHZ chain")
+        disclosure = " ".join(text.get_text() for text in chain_axis.texts)
+        assert "line L0 = L1 = L3" in disclosure
+
+    for axis in captured["ghz_chain_vs_star"].axes:
+        disclosure = " ".join(text.get_text() for text in axis.texts)
+        assert "chain on line = complete baseline" in disclosure
+
+    seed_disclosure = " ".join(
+        text.get_text() for axis in captured["seed_variability"].axes for text in axis.texts
+    )
+    assert "all 2 seeds = 1.0" in seed_disclosure
+
+
+def test_penalty_figures_disclose_heavy_hex_l1_l3_overlap(tmp_path, monkeypatch):
+    """The core-data heavy-hex L1/L3 overlap must be labelled for both metrics."""
+    from routing_overhead import plotting
+
+    captured = _captured_figures(monkeypatch)
+    rows = []
+    for metric in (PRIMARY_METRIC, COUNT_METRIC):
+        for level, medians in ((0, (2.0, 3.0)), (1, (1.5, 2.0)), (3, (1.5, 2.0))):
+            for logical_qubits, median in zip((4, 8), medians):
+                rows.append(
+                    {
+                        "metric": metric,
+                        "topology": "cairo_heavy_hex_27",
+                        "circuit_family": "ghz_chain",
+                        "optimization_level": level,
+                        "logical_qubits": logical_qubits,
+                        "median": median,
+                        "q25": median,
+                        "q75": median,
+                    }
+                )
+
+    summary = pd.DataFrame(rows)
+    for metric in (PRIMARY_METRIC, COUNT_METRIC):
+        plotting._penalty_figure(summary, metric, tmp_path)
+        disclosure = " ".join(text.get_text() for text in captured[metric].axes[0].texts)
+        assert "heavy-hex L1 = L3" in disclosure
+
+
+def test_source_figures_have_no_microtype(core_run, timing_repeats, monkeypatch):
+    """Visible source-chart text must be at least 15 points before poster placement."""
+    captured = _captured_figures(monkeypatch)
+    plot_run(core_run, timing_runs=timing_repeats)
+
+    for name, figure in captured.items():
+        visible = [
+            text.get_fontsize()
+            for text in figure.findobj(match=mtext.Text)
+            if text.get_visible() and text.get_text().strip()
+        ]
+        assert visible, name
+        assert min(visible) >= 15, (name, min(visible))
+
+
+def test_topology_figure_discloses_saved_graph_metrics(core_run, monkeypatch):
+    """The topology comparison must expose the saved path and degree summaries."""
+    captured = _captured_figures(monkeypatch)
+    plot_run(core_run)
+
+    figure = captured["topology_comparison"]
+    titles = " ".join(axis.get_title() for axis in figure.axes)
+    assert "mean degree" in titles
+    assert "mean path" in titles
+    assert "all maps connected" in " ".join(text.get_text() for text in figure.texts).lower()
 
 
 def test_plot_run_requires_aggregation_first(tmp_path):
