@@ -9,6 +9,7 @@ from pathlib import Path
 from routing_overhead.aggregation import aggregate_run
 from routing_overhead.config import ConfigError, load_config
 from routing_overhead.experiments import default_run_id, prepare_run_directory, run_grid
+from routing_overhead.export import export_run
 from routing_overhead.plotting import plot_run
 
 DEFAULT_ARTIFACTS = Path("artifacts") / "runs"
@@ -43,6 +44,11 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="RUN",
         help="repeat run directory contributing compilation times (repeatable)",
     )
+
+    export = subparsers.add_parser(
+        "export", help="write a run's summary, raw results, and topologies as JSON"
+    )
+    export.add_argument("--run", required=True, help="path to a run directory")
     return parser
 
 
@@ -58,7 +64,9 @@ def main(argv: list[str] | None = None) -> int:
         return _run(args)
     if args.command == "aggregate":
         return _aggregate(args)
-    return _plot(args)
+    if args.command == "plot":
+        return _plot(args)
+    return _export(args)
 
 
 def _validate_config(args) -> int:
@@ -117,6 +125,18 @@ def _plot(args) -> int:
         return EXIT_ERROR
     for path in figures:
         print(f"wrote {path}")
+    print(f"run directory: {run_dir}")
+    return EXIT_OK
+
+
+def _export(args) -> int:
+    run_dir = Path(args.run)
+    try:
+        result = export_run(run_dir)
+    except FileNotFoundError as error:
+        print(str(error), file=sys.stderr)
+        return EXIT_ERROR
+    print(f"wrote {result['path']}")
     print(f"run directory: {run_dir}")
     return EXIT_OK
 

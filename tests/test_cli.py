@@ -140,5 +140,26 @@ def test_aggregate_exits_nonzero_for_a_missing_run(tmp_path):
     assert main(["aggregate", "--run", str(tmp_path / "absent")]) != 0
 
 
+def test_export_writes_json_and_prints_the_path(tmp_path, tiny_config, capsys):
+    main(["run", "--config", str(tiny_config), "--artifacts", str(tmp_path), "--run-id", "r1"])
+    run_dir = tmp_path / "r1"
+    main(["aggregate", "--run", str(run_dir)])
+
+    assert main(["export", "--run", str(run_dir)]) == 0
+
+    output = capsys.readouterr().out
+    export_path = run_dir / "export" / "results.json"
+    assert str(export_path) in output
+    assert export_path.is_file()
+
+
+def test_export_exits_nonzero_when_the_run_has_not_been_aggregated(tmp_path, tiny_config, capsys):
+    main(["run", "--config", str(tiny_config), "--artifacts", str(tmp_path), "--run-id", "r1"])
+    run_dir = tmp_path / "r1"
+
+    assert main(["export", "--run", str(run_dir)]) != 0
+    assert "aggregate" in capsys.readouterr().err
+
+
 def test_no_subcommand_exits_nonzero():
     assert main([]) != 0

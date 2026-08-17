@@ -1,0 +1,889 @@
+<title>Routing Overhead Explorer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    color-scheme: light;
+    --bg-page: #eef1f5;
+    --bg-surface: #f7f8fa;
+    --bg-raised: #ffffff;
+    --ink-primary: #12151a;
+    --ink-secondary: #52596b;
+    --ink-muted: #868c99;
+    --hairline: #d8dce3;
+    --hairline-strong: #c1c6d0;
+    --accent: #4a3aa7;
+    --accent-ink: #ffffff;
+    --accent-wash: #4a3aa71a;
+    --series-complete: #7d8290;
+    --series-line: #eb6834;
+    --series-cairo: #1baf7a;
+    --shadow: 0 1px 2px rgba(18, 21, 26, 0.06), 0 8px 24px rgba(18, 21, 26, 0.05);
+    --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg-page: #0b0d10;
+      --bg-surface: #14171c;
+      --bg-raised: #1a1e24;
+      --ink-primary: #f4f6f8;
+      --ink-secondary: #aab0bd;
+      --ink-muted: #6c7280;
+      --hairline: #262b33;
+      --hairline-strong: #333a46;
+      --accent: #9085e9;
+      --accent-ink: #12151a;
+      --accent-wash: #9085e926;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px rgba(0, 0, 0, 0.35);
+      --series-complete: #8b8f9c;
+      --series-line: #d95926;
+      --series-cairo: #199e70;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg-page: #0b0d10;
+    --bg-surface: #14171c;
+    --bg-raised: #1a1e24;
+    --ink-primary: #f4f6f8;
+    --ink-secondary: #aab0bd;
+    --ink-muted: #6c7280;
+    --hairline: #262b33;
+    --hairline-strong: #333a46;
+    --accent: #9085e9;
+    --accent-ink: #12151a;
+    --accent-wash: #9085e926;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px rgba(0, 0, 0, 0.35);
+    --series-complete: #8b8f9c;
+    --series-line: #d95926;
+    --series-cairo: #199e70;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg-page);
+    color: var(--ink-primary);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 48px 24px 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* ---------- header ---------- */
+  .header { display: flex; flex-direction: column; gap: 14px; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  h1 {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: clamp(24px, 3.4vw, 34px);
+    line-height: 1.15;
+    margin: 0;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  .thesis {
+    max-width: 68ch;
+    color: var(--ink-secondary);
+    font-size: 15.5px;
+    margin: 0;
+  }
+  .thesis code {
+    font-family: var(--font-mono);
+    background: var(--bg-surface);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 0.05em 0.4em;
+    font-size: 0.9em;
+    color: var(--ink-primary);
+  }
+
+  /* ---------- stat tiles ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1px;
+    background: var(--hairline);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .stat {
+    background: var(--bg-raised);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .stat-value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: 27px;
+  }
+  .stat-sub {
+    font-size: 12.5px;
+    color: var(--ink-secondary);
+  }
+  .stat--line .stat-value { color: var(--series-line); }
+  .stat--cairo .stat-value { color: var(--series-cairo); }
+
+  /* ---------- controls ---------- */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 22px;
+    padding: 14px 18px;
+    background: var(--bg-surface);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+  }
+  .control-group { display: flex; align-items: center; gap: 8px; }
+  .control-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-right: 2px;
+  }
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .seg button {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    padding: 7px 12px;
+    border: none;
+    background: var(--bg-raised);
+    color: var(--ink-secondary);
+    cursor: pointer;
+    border-right: 1px solid var(--hairline-strong);
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+  .chip {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--hairline-strong);
+    background: var(--bg-raised);
+    color: var(--ink-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip .swatch {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    background: currentColor;
+    flex: none;
+  }
+  .chip[aria-pressed="true"] {
+    color: var(--ink-primary);
+    border-color: currentColor;
+    font-weight: 600;
+  }
+  .chip[data-series="line"][aria-pressed="true"] { color: var(--series-line); }
+  .chip[data-series="cairo"][aria-pressed="true"] { color: var(--series-cairo); }
+  .chip[data-level] { font-family: var(--font-mono); font-size: 12.5px; }
+  .chip[aria-pressed="false"] { opacity: 0.55; }
+  .chip.is-caution[aria-pressed="true"] { color: #b5891a; border-color: #b5891a; }
+
+  /* ---------- charts ---------- */
+  .charts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--hairline);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  @media (max-width: 720px) {
+    .charts { grid-template-columns: 1fr; }
+  }
+  .panel { background: var(--bg-raised); padding: 14px 14px 10px; }
+  .panel-title {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ink-primary);
+    margin-bottom: 2px;
+  }
+  .panel svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .axis-tick { fill: var(--ink-muted); font-family: var(--font-mono); font-size: 9.5px; }
+  .gridline { stroke: var(--hairline); stroke-width: 1; }
+  .baseline { stroke: var(--ink-muted); stroke-width: 1.25; stroke-dasharray: 2,3; }
+  .baseline-label { fill: var(--ink-muted); font-family: var(--font-mono); font-size: 9px; }
+  .hit { fill: transparent; cursor: pointer; }
+  .empty-note {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    padding: 30px 6px;
+    text-align: center;
+  }
+
+  /* ---------- legend ---------- */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 26px;
+    padding: 2px 6px;
+  }
+  .legend-group { display: flex; align-items: center; gap: 14px; }
+  .legend-group-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    color: var(--ink-secondary);
+  }
+  .legend-key { width: 18px; height: 0; border-top-width: 2.25px; border-top-style: solid; flex: none; }
+
+  /* ---------- tooltip ---------- */
+  #tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--bg-raised);
+    border: 1px solid var(--hairline-strong);
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    padding: 8px 10px;
+    font-size: 12.5px;
+    color: var(--ink-secondary);
+    opacity: 0;
+    transform: translateY(2px);
+    transition: opacity 0.08s ease;
+    z-index: 20;
+    min-width: 168px;
+  }
+  #tooltip.visible { opacity: 1; }
+  #tooltip .tt-value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--ink-primary);
+  }
+  #tooltip .tt-row { display: flex; justify-content: space-between; gap: 14px; }
+  #tooltip .tt-title { color: var(--ink-primary); font-weight: 600; margin-bottom: 4px; }
+
+  /* ---------- table view ---------- */
+  details.tableview {
+    background: var(--bg-surface);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    padding: 4px 4px 4px;
+  }
+  details.tableview > summary {
+    cursor: pointer;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-secondary);
+  }
+  .table-wrap { overflow-x: auto; padding: 0 12px 12px; }
+  table.data {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12.5px;
+    font-family: var(--font-mono);
+  }
+  table.data th, table.data td {
+    text-align: right;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--hairline);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  table.data th:first-child, table.data td:first-child,
+  table.data th:nth-child(2), table.data td:nth-child(2) { text-align: left; }
+  table.data th {
+    color: var(--ink-muted);
+    font-weight: 600;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------- callout / footer ---------- */
+  .callout {
+    background: var(--accent-wash);
+    border: 1px solid var(--hairline-strong);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 13.5px;
+    color: var(--ink-secondary);
+  }
+  .callout strong { color: var(--ink-primary); }
+  footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px 24px;
+    padding-top: 8px;
+    border-top: 1px solid var(--hairline);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-muted);
+  }
+</style>
+
+<div class="page">
+  <div class="header">
+    <div class="eyebrow">Quantum routing benchmark &middot; 27 physical qubits</div>
+    <h1>Routing overhead, by connectivity</h1>
+    <p class="thesis">
+      Same logical circuit, same <code>rz,sx,x,cx</code> basis, same optimization level and
+      transpiler seed &mdash; the only thing that changes is the coupling map. The penalty below is
+      <code>constrained compiled 2Q metric &divide; complete-connectivity 2Q metric</code>; <code>1&times;</code>
+      means the topology added no routing cost. Filter by optimization level, coupling map, and
+      metric to see how the ranking moves.
+    </p>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Metric</span>
+      <div class="seg" id="metric-seg" role="group" aria-label="Metric"></div>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Coupling map</span>
+      <div id="topology-chips" role="group" aria-label="Coupling map"></div>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Level</span>
+      <div id="level-chips" role="group" aria-label="Optimization level"></div>
+    </div>
+  </div>
+
+  <div class="charts" id="charts"></div>
+
+  <div class="legend" id="legend"></div>
+
+  <details class="tableview">
+    <summary>Show filtered data as a table</summary>
+    <div class="table-wrap"><table class="data" id="data-table"></table></div>
+  </details>
+
+  <div class="callout">
+    <strong>Read level 0 with care.</strong> Optimization level 0 pins the initial layout to
+    <code>TrivialLayout</code>, the identity permutation &mdash; which happens to pre-align the line
+    map with how these circuits index their qubits. It is a valid, declared Qiskit condition, but
+    it partly measures physical-index alignment rather than connectivity alone, which is why it
+    ships off by default here. Cairo's 24-qubit GHZ chain stays penalized at every level regardless:
+    its longest simple path is exactly 21 nodes, so no static placement embeds a 24-qubit chain
+    without routing.
+  </div>
+
+  <footer id="footer"></footer>
+</div>
+
+<div id="tooltip" role="status" aria-live="polite"></div>
+
+<script id="viz-data" type="application/json">{"provenance":{"run_id":"fresh-core-canonical","generated_utc":"2026-08-17T00:29:04+00:00","git_commit":"fe343d5673537d3b6802e099b387a0bade9a7296","python_version":"3.12.13","qiskit_version":"2.5.1","config":{"physical_qubits":27,"logical_qubits":[4,8,12,16,20,24],"circuit_families":["qft","ghz_chain","ghz_star","efficient_su2"],"topologies":["complete_27","line_27","cairo_heavy_hex_27"],"optimization_levels":[0,1,3],"transpiler_seeds":[11,22,33,44,55],"basis_gates":["rz","sx","x","cx"]}},"topologies":[{"topology":"complete_27","physical_qubits":27,"undirected_edges":351,"min_degree":26,"max_degree":26,"mean_degree":26.0,"diameter":1,"average_shortest_path_length":1.0},{"topology":"line_27","physical_qubits":27,"undirected_edges":26,"min_degree":1,"max_degree":2,"mean_degree":1.926,"diameter":26,"average_shortest_path_length":9.333},{"topology":"cairo_heavy_hex_27","physical_qubits":27,"undirected_edges":28,"min_degree":1,"max_degree":3,"mean_degree":2.074,"diameter":12,"average_shortest_path_length":4.952}],"summary":[{"circuit_family":"efficient_su2","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":3.5,"q25":3.375,"q75":3.625},{"circuit_family":"efficient_su2","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":4.0,"q25":4.0,"q75":4.0},{"circuit_family":"efficient_su2","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":2.125,"q25":2.125,"q75":2.125},{"circuit_family":"efficient_su2","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.125,"q25":2.125,"q75":2.125},{"circuit_family":"efficient_su2","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.125,"q25":2.125,"q75":2.125},{"circuit_family":"efficient_su2","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":2.125,"q25":2.125,"q75":2.125},{"circuit_family":"efficient_su2","logical_qubits":4,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":3.5,"q25":3.375,"q75":3.625},{"circuit_family":"efficient_su2","logical_qubits":4,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":4.0,"q25":4.0,"q75":4.0},{"circuit_family":"efficient_su2","logical_qubits":4,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":2.125,"q25":2.125,"q75":2.125},{"circuit_family":"efficient_su2","logical_qubits":4,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.25,"q25":3.25,"q75":3.25},{"circuit_family":"efficient_su2","logical_qubits":4,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.75,"q25":1.75,"q75":1.75},{"circuit_family":"efficient_su2","logical_qubits":4,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":2.5,"q25":2.5,"q75":2.5},{"circuit_family":"efficient_su2","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":3.6875,"q25":3.375,"q75":3.6875},{"circuit_family":"efficient_su2","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":5.5,"q25":4.75,"q75":5.5},{"circuit_family":"efficient_su2","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":2.5,"q25":2.5,"q75":2.9375},{"circuit_family":"efficient_su2","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.25,"q25":2.5,"q75":3.3125},{"circuit_family":"efficient_su2","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.5,"q25":2.5,"q75":2.5},{"circuit_family":"efficient_su2","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":2.5,"q25":2.5,"q75":2.5},{"circuit_family":"efficient_su2","logical_qubits":8,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.3125,"q25":4.0,"q75":4.3125},{"circuit_family":"efficient_su2","logical_qubits":8,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":5.6875,"q25":5.5,"q75":5.6875},{"circuit_family":"efficient_su2","logical_qubits":8,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.125,"q25":3.125,"q75":3.125},{"circuit_family":"efficient_su2","logical_qubits":8,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.5,"q25":3.5,"q75":3.5},{"circuit_family":"efficient_su2","logical_qubits":8,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.875,"q25":2.875,"q75":2.875},{"circuit_family":"efficient_su2","logical_qubits":8,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":3.25,"q25":3.25,"q75":3.25},{"circuit_family":"efficient_su2","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.2917,"q25":4.125,"q75":4.4583},{"circuit_family":"efficient_su2","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":7.25,"q25":7.25,"q75":7.375},{"circuit_family":"efficient_su2","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"efficient_su2","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"efficient_su2","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"efficient_su2","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"efficient_su2","logical_qubits":12,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.2917,"q25":4.2917,"q75":4.375},{"circuit_family":"efficient_su2","logical_qubits":12,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":6.25,"q25":6.125,"q75":6.375},{"circuit_family":"efficient_su2","logical_qubits":12,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.4167,"q25":3.4167,"q75":3.4167},{"circuit_family":"efficient_su2","logical_qubits":12,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.6667,"q25":3.6667,"q75":3.6667},{"circuit_family":"efficient_su2","logical_qubits":12,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":3.25,"q25":3.25,"q75":3.25},{"circuit_family":"efficient_su2","logical_qubits":12,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":3.5,"q25":3.5,"q75":3.5},{"circuit_family":"efficient_su2","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.6875,"q25":3.9688,"q75":4.7188},{"circuit_family":"efficient_su2","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":6.7188,"q25":6.5312,"q75":7.0938},{"circuit_family":"efficient_su2","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":2.6875,"q25":2.6875,"q75":2.875},{"circuit_family":"efficient_su2","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.4375,"q25":3.1562,"q75":3.5312},{"circuit_family":"efficient_su2","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.5,"q25":1.9375,"q75":2.7188},{"circuit_family":"efficient_su2","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":2.7812,"q25":2.2188,"q75":2.9062},{"circuit_family":"efficient_su2","logical_qubits":16,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.1875,"q25":4.125,"q75":4.2812},{"circuit_family":"efficient_su2","logical_qubits":16,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":6.625,"q25":6.5312,"q75":6.7188},{"circuit_family":"efficient_su2","logical_qubits":16,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.5625,"q25":3.5625,"q75":3.5625},{"circuit_family":"efficient_su2","logical_qubits":16,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.75,"q25":3.75,"q75":3.75},{"circuit_family":"efficient_su2","logical_qubits":16,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":3.4375,"q25":3.4375,"q75":3.4375},{"circuit_family":"efficient_su2","logical_qubits":16,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":3.625,"q25":3.625,"q75":3.625},{"circuit_family":"efficient_su2","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":5.175,"q25":5.025,"q75":5.725},{"circuit_family":"efficient_su2","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":8.2,"q25":8.05,"q75":8.2},{"circuit_family":"efficient_su2","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"efficient_su2","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"efficient_su2","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"efficient_su2","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"efficient_su2","logical_qubits":20,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.45,"q25":4.45,"q75":4.475},{"circuit_family":"efficient_su2","logical_qubits":20,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":6.775,"q25":6.7,"q75":6.85},{"circuit_family":"efficient_su2","logical_qubits":20,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.65,"q25":3.65,"q75":3.65},{"circuit_family":"efficient_su2","logical_qubits":20,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.8,"q25":3.8,"q75":3.8},{"circuit_family":"efficient_su2","logical_qubits":20,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":3.55,"q25":3.55,"q75":3.55},{"circuit_family":"efficient_su2","logical_qubits":20,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":3.7,"q25":3.7,"q75":3.7},{"circuit_family":"efficient_su2","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":5.25,"q25":5.1667,"q75":5.4583},{"circuit_family":"efficient_su2","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":8.5625,"q25":8.4375,"q75":8.8125},{"circuit_family":"efficient_su2","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.125,"q25":3.125,"q75":3.25},{"circuit_family":"efficient_su2","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.75,"q25":3.6875,"q75":3.75},{"circuit_family":"efficient_su2","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.375,"q25":2.1667,"q75":2.6667},{"circuit_family":"efficient_su2","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":2.5625,"q25":2.5625,"q75":3.0},{"circuit_family":"efficient_su2","logical_qubits":24,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.5625,"q25":4.2917,"q75":4.625},{"circuit_family":"efficient_su2","logical_qubits":24,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":6.875,"q25":6.875,"q75":7.0},{"circuit_family":"efficient_su2","logical_qubits":24,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.8958,"q25":3.8958,"q75":3.8958},{"circuit_family":"efficient_su2","logical_qubits":24,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":4.0,"q25":4.0,"q75":4.0},{"circuit_family":"efficient_su2","logical_qubits":24,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":3.7083,"q25":3.6458,"q75":3.7292},{"circuit_family":"efficient_su2","logical_qubits":24,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":3.8333,"q25":3.8333,"q75":3.8958},{"circuit_family":"ghz_chain","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":4,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":4,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":4,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":4,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":4,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":4,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":3.0,"q25":2.5714,"q75":3.1429},{"circuit_family":"ghz_chain","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":4.4286,"q25":4.4286,"q75":4.4286},{"circuit_family":"ghz_chain","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":8,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":8,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":8,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":8,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":8,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":8,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.3636,"q25":4.2727,"q75":4.4545},{"circuit_family":"ghz_chain","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":7.0,"q25":6.4545,"q75":7.2727},{"circuit_family":"ghz_chain","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":12,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":12,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":12,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":12,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":12,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":12,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":3.9333,"q25":3.6,"q75":5.0667},{"circuit_family":"ghz_chain","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":6.6,"q25":6.4,"q75":7.0},{"circuit_family":"ghz_chain","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":16,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":16,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":16,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":16,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":16,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":16,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.2632,"q25":4.0526,"q75":4.8947},{"circuit_family":"ghz_chain","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":7.4737,"q25":7.3158,"q75":7.7895},{"circuit_family":"ghz_chain","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":20,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":20,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":20,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":20,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":20,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":20,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.6957,"q25":4.5217,"q75":5.3913},{"circuit_family":"ghz_chain","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":8.1739,"q25":8.0435,"q75":8.4348},{"circuit_family":"ghz_chain","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":2.3043,"q25":2.3043,"q75":2.3043},{"circuit_family":"ghz_chain","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.5217,"q25":2.5217,"q75":2.5217},{"circuit_family":"ghz_chain","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.3043,"q25":2.3043,"q75":2.3043},{"circuit_family":"ghz_chain","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":2.5217,"q25":2.5217,"q75":2.5217},{"circuit_family":"ghz_chain","logical_qubits":24,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":24,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":24,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":24,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":24,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_chain","logical_qubits":24,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_star","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":3.0,"q25":3.0,"q75":3.0},{"circuit_family":"ghz_star","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":3.0,"q25":3.0,"q75":3.0},{"circuit_family":"ghz_star","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_star","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_star","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_star","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.0,"q25":1.0,"q75":1.0},{"circuit_family":"ghz_star","logical_qubits":4,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":3.0,"q25":3.0,"q75":3.0},{"circuit_family":"ghz_star","logical_qubits":4,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":3.0,"q25":3.0,"q75":3.0},{"circuit_family":"ghz_star","logical_qubits":4,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":2.0,"q25":2.0,"q75":2.0},{"circuit_family":"ghz_star","logical_qubits":4,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.0,"q25":2.0,"q75":2.0},{"circuit_family":"ghz_star","logical_qubits":4,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.3333,"q25":1.3333,"q75":1.6667},{"circuit_family":"ghz_star","logical_qubits":4,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.3333,"q25":1.3333,"q75":2.0},{"circuit_family":"ghz_star","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":3.2857,"q25":3.1429,"q75":3.5714},{"circuit_family":"ghz_star","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":4.4286,"q25":4.4286,"q75":4.4286},{"circuit_family":"ghz_star","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":2.7143,"q25":2.7143,"q75":3.1429},{"circuit_family":"ghz_star","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.7143,"q25":2.7143,"q75":3.1429},{"circuit_family":"ghz_star","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.1429,"q25":2.1429,"q75":2.2857},{"circuit_family":"ghz_star","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":2.1429,"q25":2.1429,"q75":2.4286},{"circuit_family":"ghz_star","logical_qubits":8,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":3.7143,"q25":3.5714,"q75":4.0},{"circuit_family":"ghz_star","logical_qubits":8,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":4.0,"q25":4.0,"q75":4.4286},{"circuit_family":"ghz_star","logical_qubits":8,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.1429,"q25":3.1429,"q75":3.1429},{"circuit_family":"ghz_star","logical_qubits":8,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.1429,"q25":3.1429,"q75":3.1429},{"circuit_family":"ghz_star","logical_qubits":8,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.7143,"q25":1.7143,"q75":2.2857},{"circuit_family":"ghz_star","logical_qubits":8,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.7143,"q25":1.7143,"q75":2.2857},{"circuit_family":"ghz_star","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.2727,"q25":4.2727,"q75":5.0},{"circuit_family":"ghz_star","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":6.4545,"q25":6.4545,"q75":6.7273},{"circuit_family":"ghz_star","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.0,"q25":2.9091,"q75":3.0},{"circuit_family":"ghz_star","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.4545,"q25":3.4545,"q75":3.4545},{"circuit_family":"ghz_star","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.8182,"q25":2.7273,"q75":2.9091},{"circuit_family":"ghz_star","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":3.0909,"q25":2.8182,"q75":3.2727},{"circuit_family":"ghz_star","logical_qubits":12,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.0,"q25":4.0,"q75":4.1818},{"circuit_family":"ghz_star","logical_qubits":12,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":5.0909,"q25":5.0909,"q75":5.3636},{"circuit_family":"ghz_star","logical_qubits":12,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.4545,"q25":3.4545,"q75":3.4545},{"circuit_family":"ghz_star","logical_qubits":12,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.4545,"q25":3.4545,"q75":3.4545},{"circuit_family":"ghz_star","logical_qubits":12,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.8182,"q25":1.8182,"q75":1.8182},{"circuit_family":"ghz_star","logical_qubits":12,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.8182,"q25":1.8182,"q75":1.8182},{"circuit_family":"ghz_star","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.1333,"q25":4.0,"q75":4.6667},{"circuit_family":"ghz_star","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":6.2,"q25":6.0,"q75":6.2},{"circuit_family":"ghz_star","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.4,"q25":3.4,"q75":3.4},{"circuit_family":"ghz_star","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.8,"q25":3.8,"q75":3.8},{"circuit_family":"ghz_star","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":3.0,"q25":2.9333,"q75":3.0},{"circuit_family":"ghz_star","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":3.2,"q25":3.1333,"q75":3.4},{"circuit_family":"ghz_star","logical_qubits":16,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.5333,"q25":4.2,"q75":4.5333},{"circuit_family":"ghz_star","logical_qubits":16,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":5.2,"q25":5.2,"q75":5.8},{"circuit_family":"ghz_star","logical_qubits":16,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.6,"q25":3.6,"q75":3.6},{"circuit_family":"ghz_star","logical_qubits":16,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.6,"q25":3.6,"q75":3.6},{"circuit_family":"ghz_star","logical_qubits":16,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.8667,"q25":1.8667,"q75":1.8667},{"circuit_family":"ghz_star","logical_qubits":16,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.8667,"q25":1.8667,"q75":1.8667},{"circuit_family":"ghz_star","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.4211,"q25":4.1579,"q75":4.5263},{"circuit_family":"ghz_star","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":6.8421,"q25":6.3684,"q75":7.0},{"circuit_family":"ghz_star","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.5263,"q25":3.4211,"q75":3.6842},{"circuit_family":"ghz_star","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":4.0,"q25":3.8421,"q75":4.0},{"circuit_family":"ghz_star","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":3.3684,"q25":2.8947,"q75":3.4211},{"circuit_family":"ghz_star","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":3.4211,"q25":3.0,"q75":3.4737},{"circuit_family":"ghz_star","logical_qubits":20,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.5789,"q25":4.1579,"q75":4.6842},{"circuit_family":"ghz_star","logical_qubits":20,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":5.5789,"q25":5.1053,"q75":5.5789},{"circuit_family":"ghz_star","logical_qubits":20,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.6842,"q25":3.6842,"q75":3.6842},{"circuit_family":"ghz_star","logical_qubits":20,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.6842,"q25":3.6842,"q75":3.6842},{"circuit_family":"ghz_star","logical_qubits":20,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.8947,"q25":1.8947,"q75":2.1053},{"circuit_family":"ghz_star","logical_qubits":20,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.8947,"q25":1.8947,"q75":2.1053},{"circuit_family":"ghz_star","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.8696,"q25":4.4783,"q75":4.9565},{"circuit_family":"ghz_star","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":7.6522,"q25":7.1304,"q75":7.6522},{"circuit_family":"ghz_star","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.8696,"q25":3.8261,"q75":3.913},{"circuit_family":"ghz_star","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.8696,"q25":3.8696,"q75":4.0},{"circuit_family":"ghz_star","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":3.3478,"q25":3.2609,"q75":3.3913},{"circuit_family":"ghz_star","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":3.4783,"q25":3.3913,"q75":3.5217},{"circuit_family":"ghz_star","logical_qubits":24,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.4783,"q25":4.2609,"q75":4.6522},{"circuit_family":"ghz_star","logical_qubits":24,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":5.5652,"q25":5.4348,"q75":5.8261},{"circuit_family":"ghz_star","logical_qubits":24,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.7391,"q25":3.7391,"q75":3.7391},{"circuit_family":"ghz_star","logical_qubits":24,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":3.7391,"q25":3.7391,"q75":3.7391},{"circuit_family":"ghz_star","logical_qubits":24,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.087,"q25":2.087,"q75":2.087},{"circuit_family":"ghz_star","logical_qubits":24,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":2.087,"q25":2.087,"q75":2.087},{"circuit_family":"qft","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":2.2,"q25":2.1,"q75":2.2},{"circuit_family":"qft","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":2.0,"q25":2.0,"q75":2.0},{"circuit_family":"qft","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.8,"q25":1.8,"q75":1.8},{"circuit_family":"qft","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.5,"q25":1.5,"q75":1.5},{"circuit_family":"qft","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.8,"q25":1.8,"q75":1.8},{"circuit_family":"qft","logical_qubits":4,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.5,"q25":1.5,"q75":1.5},{"circuit_family":"qft","logical_qubits":4,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":2.2,"q25":2.1,"q75":2.2},{"circuit_family":"qft","logical_qubits":4,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":2.0,"q25":2.0,"q75":2.0},{"circuit_family":"qft","logical_qubits":4,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":1.9,"q25":1.9,"q75":1.9},{"circuit_family":"qft","logical_qubits":4,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":1.75,"q25":1.75,"q75":1.75},{"circuit_family":"qft","logical_qubits":4,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":1.7,"q25":1.5,"q75":1.7},{"circuit_family":"qft","logical_qubits":4,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.5833,"q25":1.4167,"q75":1.5833},{"circuit_family":"qft","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":3.8846,"q25":3.8077,"q75":3.9615},{"circuit_family":"qft","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":2.9821,"q25":2.8214,"q75":3.0893},{"circuit_family":"qft","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":2.7692,"q25":2.6923,"q75":2.8077},{"circuit_family":"qft","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.125,"q25":2.125,"q75":2.1786},{"circuit_family":"qft","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.2308,"q25":2.1923,"q75":2.2308},{"circuit_family":"qft","logical_qubits":8,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.5179,"q25":1.4821,"q75":1.5714},{"circuit_family":"qft","logical_qubits":8,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":2.9615,"q25":2.9615,"q75":3.1923},{"circuit_family":"qft","logical_qubits":8,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":2.5,"q25":2.5,"q75":2.5536},{"circuit_family":"qft","logical_qubits":8,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":2.4231,"q25":2.4231,"q75":2.6154},{"circuit_family":"qft","logical_qubits":8,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.2321,"q25":2.2321,"q75":2.2321},{"circuit_family":"qft","logical_qubits":8,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.0,"q25":2.0,"q75":2.1154},{"circuit_family":"qft","logical_qubits":8,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.6607,"q25":1.6607,"q75":1.6964},{"circuit_family":"qft","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.6429,"q25":4.3571,"q75":4.7143},{"circuit_family":"qft","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":3.6136,"q25":3.4318,"q75":3.7273},{"circuit_family":"qft","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.0952,"q25":2.7619,"q75":3.6667},{"circuit_family":"qft","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.2273,"q25":2.2045,"q75":2.3182},{"circuit_family":"qft","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.7857,"q25":2.5476,"q75":3.1667},{"circuit_family":"qft","logical_qubits":12,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.7803,"q25":1.7348,"q75":1.7879},{"circuit_family":"qft","logical_qubits":12,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":3.8095,"q25":3.5238,"q75":3.9286},{"circuit_family":"qft","logical_qubits":12,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":2.75,"q25":2.6818,"q75":2.8636},{"circuit_family":"qft","logical_qubits":12,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":2.7381,"q25":2.6905,"q75":2.7857},{"circuit_family":"qft","logical_qubits":12,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.3864,"q25":2.3864,"q75":2.4091},{"circuit_family":"qft","logical_qubits":12,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.2143,"q25":2.1667,"q75":2.2381},{"circuit_family":"qft","logical_qubits":12,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.6515,"q25":1.6439,"q75":1.6742},{"circuit_family":"qft","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":5.4655,"q25":5.3448,"q75":5.4655},{"circuit_family":"qft","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":3.2375,"q25":3.225,"q75":3.25},{"circuit_family":"qft","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.9483,"q25":3.8793,"q75":4.0172},{"circuit_family":"qft","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.4375,"q25":2.375,"q75":2.4625},{"circuit_family":"qft","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":3.1034,"q25":2.8966,"q75":3.1724},{"circuit_family":"qft","logical_qubits":16,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.7941,"q25":1.7479,"q75":1.8571},{"circuit_family":"qft","logical_qubits":16,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":3.931,"q25":3.8793,"q75":4.3621},{"circuit_family":"qft","logical_qubits":16,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":2.8375,"q25":2.8,"q75":2.9},{"circuit_family":"qft","logical_qubits":16,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":2.8621,"q25":2.8448,"q75":2.9483},{"circuit_family":"qft","logical_qubits":16,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.4375,"q25":2.4375,"q75":2.45},{"circuit_family":"qft","logical_qubits":16,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.1552,"q25":2.1552,"q75":2.2586},{"circuit_family":"qft","logical_qubits":16,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.6218,"q25":1.6176,"q75":1.6429},{"circuit_family":"qft","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":6.2162,"q25":6.0946,"q75":6.4054},{"circuit_family":"qft","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":3.4947,"q25":3.4079,"q75":3.55},{"circuit_family":"qft","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":3.1216,"q25":3.0135,"q75":3.7838},{"circuit_family":"qft","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.4211,"q25":2.3974,"q75":2.4605},{"circuit_family":"qft","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.7973,"q25":2.5,"q75":3.0676},{"circuit_family":"qft","logical_qubits":20,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.8429,"q25":1.78,"q75":1.8686},{"circuit_family":"qft","logical_qubits":20,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.0135,"q25":4.0,"q75":4.0946},{"circuit_family":"qft","logical_qubits":20,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":2.8395,"q25":2.8316,"q75":2.8868},{"circuit_family":"qft","logical_qubits":20,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":2.9054,"q25":2.8514,"q75":3.0135},{"circuit_family":"qft","logical_qubits":20,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.4684,"q25":2.4684,"q75":2.4763},{"circuit_family":"qft","logical_qubits":20,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.2838,"q25":2.0541,"q75":2.3784},{"circuit_family":"qft","logical_qubits":20,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.7371,"q25":1.7229,"q75":1.7457},{"circuit_family":"qft","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":5.9222,"q25":5.5667,"q75":6.6111},{"circuit_family":"qft","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":3.413,"q25":3.3098,"q75":3.4837},{"circuit_family":"qft","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":4.0,"q25":3.9444,"q75":4.0444},{"circuit_family":"qft","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.5054,"q25":2.4946,"q75":2.5109},{"circuit_family":"qft","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":3.2111,"q25":2.9556,"q75":3.2444},{"circuit_family":"qft","logical_qubits":24,"topology":"cairo_heavy_hex_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":2.0368,"q25":2.0108,"q75":2.0779},{"circuit_family":"qft","logical_qubits":24,"topology":"line_27","optimization_level":0,"metric":"two_qubit_depth_penalty","count":5,"median":4.3333,"q25":4.2,"q75":4.3333},{"circuit_family":"qft","logical_qubits":24,"topology":"line_27","optimization_level":0,"metric":"two_qubit_count_penalty","count":5,"median":2.9565,"q25":2.9402,"q75":2.9565},{"circuit_family":"qft","logical_qubits":24,"topology":"line_27","optimization_level":1,"metric":"two_qubit_depth_penalty","count":5,"median":2.9667,"q25":2.9444,"q75":3.0556},{"circuit_family":"qft","logical_qubits":24,"topology":"line_27","optimization_level":1,"metric":"two_qubit_count_penalty","count":5,"median":2.4783,"q25":2.4783,"q75":2.4783},{"circuit_family":"qft","logical_qubits":24,"topology":"line_27","optimization_level":3,"metric":"two_qubit_depth_penalty","count":5,"median":2.3333,"q25":2.0778,"q75":2.3889},{"circuit_family":"qft","logical_qubits":24,"topology":"line_27","optimization_level":3,"metric":"two_qubit_count_penalty","count":5,"median":1.9026,"q25":1.8896,"q75":1.9069}],"raw":[{"f":"qft","n":4,"t":"line_27","l":0,"d":2.7,"c":2.25},{"f":"qft","n":4,"t":"line_27","l":0,"d":2.2,"c":2.0},{"f":"qft","n":4,"t":"line_27","l":0,"d":2.1,"c":2.0},{"f":"qft","n":4,"t":"line_27","l":0,"d":2.2,"c":2.0},{"f":"qft","n":4,"t":"line_27","l":0,"d":2.1,"c":2.0},{"f":"qft","n":4,"t":"line_27","l":1,"d":1.9,"c":1.75},{"f":"qft","n":4,"t":"line_27","l":1,"d":1.9,"c":1.75},{"f":"qft","n":4,"t":"line_27","l":1,"d":1.9,"c":1.75},{"f":"qft","n":4,"t":"line_27","l":1,"d":1.9,"c":1.75},{"f":"qft","n":4,"t":"line_27","l":1,"d":1.9,"c":1.75},{"f":"qft","n":4,"t":"line_27","l":3,"d":1.5,"c":1.4167},{"f":"qft","n":4,"t":"line_27","l":3,"d":1.7,"c":1.5833},{"f":"qft","n":4,"t":"line_27","l":3,"d":1.5,"c":1.4167},{"f":"qft","n":4,"t":"line_27","l":3,"d":1.7,"c":1.5833},{"f":"qft","n":4,"t":"line_27","l":3,"d":1.7,"c":1.5833},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":0,"d":2.7,"c":2.25},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":0,"d":2.2,"c":2.0},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":0,"d":2.1,"c":2.0},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":0,"d":2.2,"c":2.0},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":0,"d":2.1,"c":2.0},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.8,"c":1.5},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.8,"c":1.5},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.8,"c":1.5},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.8,"c":1.5},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.8,"c":1.5},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.8,"c":1.5},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.8,"c":1.5},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.8,"c":1.5},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.8,"c":1.5},{"f":"qft","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.8,"c":1.5},{"f":"qft","n":8,"t":"line_27","l":0,"d":3.2308,"c":2.6071},{"f":"qft","n":8,"t":"line_27","l":0,"d":3.1923,"c":2.5536},{"f":"qft","n":8,"t":"line_27","l":0,"d":2.9615,"c":2.5},{"f":"qft","n":8,"t":"line_27","l":0,"d":2.8846,"c":2.5},{"f":"qft","n":8,"t":"line_27","l":0,"d":2.9615,"c":2.5},{"f":"qft","n":8,"t":"line_27","l":1,"d":2.4231,"c":2.2321},{"f":"qft","n":8,"t":"line_27","l":1,"d":2.6154,"c":2.2321},{"f":"qft","n":8,"t":"line_27","l":1,"d":2.6923,"c":2.2857},{"f":"qft","n":8,"t":"line_27","l":1,"d":2.4231,"c":2.2321},{"f":"qft","n":8,"t":"line_27","l":1,"d":2.4231,"c":2.2321},{"f":"qft","n":8,"t":"line_27","l":3,"d":2.0,"c":1.6607},{"f":"qft","n":8,"t":"line_27","l":3,"d":2.0,"c":1.6607},{"f":"qft","n":8,"t":"line_27","l":3,"d":2.1923,"c":1.7321},{"f":"qft","n":8,"t":"line_27","l":3,"d":1.8846,"c":1.5893},{"f":"qft","n":8,"t":"line_27","l":3,"d":2.1154,"c":1.6964},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.8077,"c":2.9821},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.6154,"c":2.7679},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":0,"d":4.0,"c":3.0893},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.9615,"c":2.8214},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.8846,"c":3.0893},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":1,"d":2.6538,"c":2.125},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":1,"d":2.7692,"c":2.1786},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":1,"d":2.6923,"c":1.9643},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":1,"d":2.8077,"c":2.125},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":1,"d":2.8077,"c":2.1786},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":3,"d":1.9615,"c":1.4464},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.1923,"c":1.4821},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.2692,"c":1.5179},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.2308,"c":1.6786},{"f":"qft","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.2308,"c":1.5714},{"f":"qft","n":12,"t":"line_27","l":0,"d":3.5238,"c":2.6818},{"f":"qft","n":12,"t":"line_27","l":0,"d":3.1905,"c":2.5909},{"f":"qft","n":12,"t":"line_27","l":0,"d":4.0714,"c":2.8636},{"f":"qft","n":12,"t":"line_27","l":0,"d":3.8095,"c":2.8636},{"f":"qft","n":12,"t":"line_27","l":0,"d":3.9286,"c":2.75},{"f":"qft","n":12,"t":"line_27","l":1,"d":2.8333,"c":2.3864},{"f":"qft","n":12,"t":"line_27","l":1,"d":2.6905,"c":2.3864},{"f":"qft","n":12,"t":"line_27","l":1,"d":2.7381,"c":2.4091},{"f":"qft","n":12,"t":"line_27","l":1,"d":2.5952,"c":2.4091},{"f":"qft","n":12,"t":"line_27","l":1,"d":2.7857,"c":2.3636},{"f":"qft","n":12,"t":"line_27","l":3,"d":2.1667,"c":1.6439},{"f":"qft","n":12,"t":"line_27","l":3,"d":2.2143,"c":1.6288},{"f":"qft","n":12,"t":"line_27","l":3,"d":2.2381,"c":1.6742},{"f":"qft","n":12,"t":"line_27","l":3,"d":2.1667,"c":1.6515},{"f":"qft","n":12,"t":"line_27","l":3,"d":2.3095,"c":1.7955},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":0,"d":4.9286,"c":3.7273},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":0,"d":4.3571,"c":3.2955},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":0,"d":4.3333,"c":3.6136},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":0,"d":4.6429,"c":3.4318},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":0,"d":4.7143,"c":3.7273},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":1,"d":3.6667,"c":2.2273},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":1,"d":3.6667,"c":2.3182},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":1,"d":3.0952,"c":2.1364},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":1,"d":2.6667,"c":2.2045},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":1,"d":2.7619,"c":2.4091},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":3,"d":2.5476,"c":1.7348},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":3,"d":2.0714,"c":1.4773},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":3,"d":3.2381,"c":1.7955},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":3,"d":3.1667,"c":1.7803},{"f":"qft","n":12,"t":"cairo_heavy_hex_27","l":3,"d":2.7857,"c":1.7879},{"f":"qft","n":16,"t":"line_27","l":0,"d":3.8621,"c":2.9},{"f":"qft","n":16,"t":"line_27","l":0,"d":4.3793,"c":2.7875},{"f":"qft","n":16,"t":"line_27","l":0,"d":4.3621,"c":2.925},{"f":"qft","n":16,"t":"line_27","l":0,"d":3.931,"c":2.8},{"f":"qft","n":16,"t":"line_27","l":0,"d":3.8793,"c":2.8375},{"f":"qft","n":16,"t":"line_27","l":1,"d":2.9483,"c":2.425},{"f":"qft","n":16,"t":"line_27","l":1,"d":2.8621,"c":2.4375},{"f":"qft","n":16,"t":"line_27","l":1,"d":2.9828,"c":2.45},{"f":"qft","n":16,"t":"line_27","l":1,"d":2.8276,"c":2.4375},{"f":"qft","n":16,"t":"line_27","l":1,"d":2.8448,"c":2.45},{"f":"qft","n":16,"t":"line_27","l":3,"d":2.2931,"c":1.6639},{"f":"qft","n":16,"t":"line_27","l":3,"d":2.2586,"c":1.6429},{"f":"qft","n":16,"t":"line_27","l":3,"d":2.1552,"c":1.6176},{"f":"qft","n":16,"t":"line_27","l":3,"d":2.1552,"c":1.6218},{"f":"qft","n":16,"t":"line_27","l":3,"d":1.9828,"c":1.5966},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":0,"d":5.2069,"c":3.175},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":0,"d":5.4655,"c":3.2375},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":0,"d":5.4655,"c":3.225},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":0,"d":6.2414,"c":3.4875},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":0,"d":5.3448,"c":3.25},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":1,"d":3.9483,"c":2.5625},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":1,"d":4.1034,"c":2.375},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":1,"d":3.8793,"c":2.4625},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":1,"d":4.0172,"c":2.325},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":1,"d":3.7586,"c":2.4375},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":3,"d":3.1034,"c":1.8571},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":3,"d":2.8966,"c":1.7395},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":3,"d":2.8966,"c":1.7479},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":3,"d":3.1724,"c":1.9076},{"f":"qft","n":16,"t":"cairo_heavy_hex_27","l":3,"d":3.2586,"c":1.7941},{"f":"qft","n":20,"t":"line_27","l":0,"d":4.0,"c":2.8316},{"f":"qft","n":20,"t":"line_27","l":0,"d":4.0946,"c":2.9263},{"f":"qft","n":20,"t":"line_27","l":0,"d":4.0135,"c":2.8395},{"f":"qft","n":20,"t":"line_27","l":0,"d":4.5,"c":2.8868},{"f":"qft","n":20,"t":"line_27","l":0,"d":3.6486,"c":2.7289},{"f":"qft","n":20,"t":"line_27","l":1,"d":3.0676,"c":2.4763},{"f":"qft","n":20,"t":"line_27","l":1,"d":2.8514,"c":2.4763},{"f":"qft","n":20,"t":"line_27","l":1,"d":2.8514,"c":2.4684},{"f":"qft","n":20,"t":"line_27","l":1,"d":2.9054,"c":2.4684},{"f":"qft","n":20,"t":"line_27","l":1,"d":3.0135,"c":2.4684},{"f":"qft","n":20,"t":"line_27","l":3,"d":2.0405,"c":1.7086},{"f":"qft","n":20,"t":"line_27","l":3,"d":2.3784,"c":1.7371},{"f":"qft","n":20,"t":"line_27","l":3,"d":2.3919,"c":1.7657},{"f":"qft","n":20,"t":"line_27","l":3,"d":2.2838,"c":1.7457},{"f":"qft","n":20,"t":"line_27","l":3,"d":2.0541,"c":1.7229},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":0,"d":7.527,"c":3.5737},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":0,"d":6.0946,"c":3.4079},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":0,"d":6.4054,"c":3.55},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":0,"d":5.4189,"c":3.4947},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":0,"d":6.2162,"c":3.3526},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":1,"d":3.1216,"c":2.3974},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":1,"d":2.9865,"c":2.4684},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":1,"d":3.0135,"c":2.4605},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":1,"d":3.7838,"c":2.4211},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":1,"d":3.7838,"c":2.3816},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":3,"d":2.5,"c":1.8686},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":3,"d":3.0676,"c":1.8429},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":3,"d":2.2027,"c":1.7171},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":3,"d":3.3784,"c":1.9514},{"f":"qft","n":20,"t":"cairo_heavy_hex_27","l":3,"d":2.7973,"c":1.78},{"f":"qft","n":24,"t":"line_27","l":0,"d":4.3333,"c":2.9565},{"f":"qft","n":24,"t":"line_27","l":0,"d":4.3333,"c":2.9402},{"f":"qft","n":24,"t":"line_27","l":0,"d":4.7444,"c":3.0},{"f":"qft","n":24,"t":"line_27","l":0,"d":4.2,"c":2.9565},{"f":"qft","n":24,"t":"line_27","l":0,"d":4.1667,"c":2.8424},{"f":"qft","n":24,"t":"line_27","l":1,"d":3.0889,"c":2.4837},{"f":"qft","n":24,"t":"line_27","l":1,"d":3.0556,"c":2.4783},{"f":"qft","n":24,"t":"line_27","l":1,"d":2.9667,"c":2.4674},{"f":"qft","n":24,"t":"line_27","l":1,"d":2.9444,"c":2.4783},{"f":"qft","n":24,"t":"line_27","l":1,"d":2.8111,"c":2.4783},{"f":"qft","n":24,"t":"line_27","l":3,"d":2.0,"c":1.8723},{"f":"qft","n":24,"t":"line_27","l":3,"d":2.0778,"c":1.8896},{"f":"qft","n":24,"t":"line_27","l":3,"d":2.5778,"c":1.9372},{"f":"qft","n":24,"t":"line_27","l":3,"d":2.3889,"c":1.9069},{"f":"qft","n":24,"t":"line_27","l":3,"d":2.3333,"c":1.9026},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":0,"d":5.9222,"c":3.4837},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":0,"d":6.6111,"c":3.413},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":0,"d":5.5667,"c":3.3098},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":0,"d":5.4333,"c":3.3098},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":0,"d":6.6111,"c":3.5761},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":1,"d":3.9444,"c":2.5109},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":1,"d":4.0444,"c":2.5435},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":1,"d":4.0,"c":2.4946},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":1,"d":4.1667,"c":2.5054},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":1,"d":3.7444,"c":2.4946},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":3,"d":3.2111,"c":2.0108},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":3,"d":2.9556,"c":2.0368},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":3,"d":3.5778,"c":2.2035},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":3,"d":3.2444,"c":2.0779},{"f":"qft","n":24,"t":"cairo_heavy_hex_27","l":3,"d":1.9556,"c":1.7489},{"f":"ghz_chain","n":4,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.4286,"c":4.0},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":0,"d":2.5714,"c":4.4286},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":0,"d":2.5714,"c":4.8571},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.0,"c":4.4286},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.1429,"c":4.4286},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":8,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":0,"d":4.3636,"c":7.5455},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":0,"d":4.2727,"c":7.2727},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":0,"d":3.3636,"c":6.4545},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":0,"d":4.4545,"c":6.4545},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":0,"d":5.0,"c":7.0},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":12,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":0,"d":5.1333,"c":7.4},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":0,"d":3.6,"c":6.6},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":0,"d":3.4667,"c":6.4},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":0,"d":3.9333,"c":5.8},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":0,"d":5.0667,"c":7.0},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":16,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":0,"d":5.3158,"c":7.7895},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":0,"d":4.0,"c":7.4737},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":0,"d":4.0526,"c":7.3158},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":0,"d":4.2632,"c":6.6842},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":0,"d":4.8947,"c":7.7895},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":20,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":0,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"line_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":0,"d":5.4348,"c":8.0435},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":0,"d":4.5217,"c":8.4348},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":0,"d":4.6957,"c":8.1739},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":0,"d":4.4783,"c":7.3913},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":0,"d":5.3913,"c":8.5652},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":1,"d":2.3043,"c":2.5217},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":1,"d":2.3043,"c":2.5217},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":1,"d":2.3043,"c":2.5217},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":1,"d":2.3043,"c":2.5217},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":1,"d":2.3043,"c":2.5217},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":3,"d":2.3043,"c":2.5217},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":3,"d":2.3043,"c":2.5217},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":3,"d":2.3043,"c":2.5217},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":3,"d":2.3043,"c":2.5217},{"f":"ghz_chain","n":24,"t":"cairo_heavy_hex_27","l":3,"d":2.2174,"c":2.4783},{"f":"ghz_star","n":4,"t":"line_27","l":0,"d":3.0,"c":3.0},{"f":"ghz_star","n":4,"t":"line_27","l":0,"d":3.0,"c":3.0},{"f":"ghz_star","n":4,"t":"line_27","l":0,"d":3.0,"c":3.0},{"f":"ghz_star","n":4,"t":"line_27","l":0,"d":3.0,"c":3.0},{"f":"ghz_star","n":4,"t":"line_27","l":0,"d":3.0,"c":3.0},{"f":"ghz_star","n":4,"t":"line_27","l":1,"d":2.0,"c":2.0},{"f":"ghz_star","n":4,"t":"line_27","l":1,"d":2.0,"c":2.0},{"f":"ghz_star","n":4,"t":"line_27","l":1,"d":2.0,"c":2.0},{"f":"ghz_star","n":4,"t":"line_27","l":1,"d":2.0,"c":2.0},{"f":"ghz_star","n":4,"t":"line_27","l":1,"d":2.0,"c":2.0},{"f":"ghz_star","n":4,"t":"line_27","l":3,"d":1.3333,"c":1.3333},{"f":"ghz_star","n":4,"t":"line_27","l":3,"d":2.0,"c":2.0},{"f":"ghz_star","n":4,"t":"line_27","l":3,"d":1.3333,"c":1.3333},{"f":"ghz_star","n":4,"t":"line_27","l":3,"d":1.3333,"c":1.3333},{"f":"ghz_star","n":4,"t":"line_27","l":3,"d":1.6667,"c":2.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":0,"d":3.0,"c":3.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":0,"d":3.0,"c":3.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":0,"d":3.0,"c":3.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":0,"d":3.0,"c":3.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":0,"d":3.0,"c":3.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_star","n":4,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"ghz_star","n":8,"t":"line_27","l":0,"d":4.0,"c":4.0},{"f":"ghz_star","n":8,"t":"line_27","l":0,"d":3.5714,"c":4.4286},{"f":"ghz_star","n":8,"t":"line_27","l":0,"d":3.7143,"c":4.4286},{"f":"ghz_star","n":8,"t":"line_27","l":0,"d":3.5714,"c":4.0},{"f":"ghz_star","n":8,"t":"line_27","l":0,"d":4.0,"c":4.0},{"f":"ghz_star","n":8,"t":"line_27","l":1,"d":3.1429,"c":3.1429},{"f":"ghz_star","n":8,"t":"line_27","l":1,"d":3.1429,"c":3.1429},{"f":"ghz_star","n":8,"t":"line_27","l":1,"d":3.1429,"c":3.1429},{"f":"ghz_star","n":8,"t":"line_27","l":1,"d":3.1429,"c":3.1429},{"f":"ghz_star","n":8,"t":"line_27","l":1,"d":3.1429,"c":3.1429},{"f":"ghz_star","n":8,"t":"line_27","l":3,"d":2.2857,"c":2.2857},{"f":"ghz_star","n":8,"t":"line_27","l":3,"d":1.7143,"c":1.7143},{"f":"ghz_star","n":8,"t":"line_27","l":3,"d":1.7143,"c":1.7143},{"f":"ghz_star","n":8,"t":"line_27","l":3,"d":2.2857,"c":2.2857},{"f":"ghz_star","n":8,"t":"line_27","l":3,"d":1.7143,"c":1.7143},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":0,"d":4.0,"c":4.4286},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":0,"d":2.8571,"c":4.4286},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.1429,"c":4.4286},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.2857,"c":4.4286},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.5714,"c":4.4286},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":1,"d":2.1429,"c":2.7143},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":1,"d":3.1429,"c":3.1429},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":1,"d":3.1429,"c":3.1429},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":1,"d":2.7143,"c":2.7143},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":1,"d":2.7143,"c":2.7143},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.0,"c":2.0},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.2857,"c":2.4286},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.1429,"c":2.1429},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.7143,"c":2.7143},{"f":"ghz_star","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.1429,"c":2.1429},{"f":"ghz_star","n":12,"t":"line_27","l":0,"d":4.1818,"c":4.2727},{"f":"ghz_star","n":12,"t":"line_27","l":0,"d":4.0,"c":5.0909},{"f":"ghz_star","n":12,"t":"line_27","l":0,"d":4.0,"c":5.6364},{"f":"ghz_star","n":12,"t":"line_27","l":0,"d":4.0,"c":5.0909},{"f":"ghz_star","n":12,"t":"line_27","l":0,"d":4.5455,"c":5.3636},{"f":"ghz_star","n":12,"t":"line_27","l":1,"d":3.4545,"c":3.4545},{"f":"ghz_star","n":12,"t":"line_27","l":1,"d":3.4545,"c":3.4545},{"f":"ghz_star","n":12,"t":"line_27","l":1,"d":3.4545,"c":3.4545},{"f":"ghz_star","n":12,"t":"line_27","l":1,"d":3.4545,"c":3.4545},{"f":"ghz_star","n":12,"t":"line_27","l":1,"d":3.4545,"c":3.4545},{"f":"ghz_star","n":12,"t":"line_27","l":3,"d":1.8182,"c":1.8182},{"f":"ghz_star","n":12,"t":"line_27","l":3,"d":2.1818,"c":2.1818},{"f":"ghz_star","n":12,"t":"line_27","l":3,"d":1.8182,"c":1.8182},{"f":"ghz_star","n":12,"t":"line_27","l":3,"d":1.8182,"c":1.8182},{"f":"ghz_star","n":12,"t":"line_27","l":3,"d":1.8182,"c":1.8182},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":0,"d":5.3636,"c":7.5455},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":0,"d":3.7273,"c":6.4545},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":0,"d":4.2727,"c":6.7273},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":0,"d":4.2727,"c":5.9091},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":0,"d":5.0,"c":6.4545},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":1,"d":3.0,"c":3.4545},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":1,"d":2.9091,"c":3.7273},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":1,"d":3.0,"c":3.4545},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":1,"d":3.0909,"c":3.4545},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":1,"d":2.9091,"c":3.4545},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":3,"d":2.1818,"c":2.2727},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":3,"d":2.8182,"c":2.8182},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":3,"d":2.7273,"c":3.0909},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":3,"d":3.0,"c":3.2727},{"f":"ghz_star","n":12,"t":"cairo_heavy_hex_27","l":3,"d":2.9091,"c":3.2727},{"f":"ghz_star","n":16,"t":"line_27","l":0,"d":4.5333,"c":5.2},{"f":"ghz_star","n":16,"t":"line_27","l":0,"d":4.2,"c":5.2},{"f":"ghz_star","n":16,"t":"line_27","l":0,"d":4.2,"c":5.8},{"f":"ghz_star","n":16,"t":"line_27","l":0,"d":4.5333,"c":5.2},{"f":"ghz_star","n":16,"t":"line_27","l":0,"d":4.5333,"c":6.0},{"f":"ghz_star","n":16,"t":"line_27","l":1,"d":3.6,"c":3.6},{"f":"ghz_star","n":16,"t":"line_27","l":1,"d":3.6,"c":3.6},{"f":"ghz_star","n":16,"t":"line_27","l":1,"d":3.6,"c":3.6},{"f":"ghz_star","n":16,"t":"line_27","l":1,"d":3.6,"c":3.6},{"f":"ghz_star","n":16,"t":"line_27","l":1,"d":3.6,"c":3.6},{"f":"ghz_star","n":16,"t":"line_27","l":3,"d":1.8667,"c":1.8667},{"f":"ghz_star","n":16,"t":"line_27","l":3,"d":1.8667,"c":1.8667},{"f":"ghz_star","n":16,"t":"line_27","l":3,"d":1.8667,"c":1.8667},{"f":"ghz_star","n":16,"t":"line_27","l":3,"d":1.8667,"c":1.8667},{"f":"ghz_star","n":16,"t":"line_27","l":3,"d":1.8667,"c":1.8667},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":0,"d":5.3333,"c":7.4},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":0,"d":3.6,"c":6.2},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":0,"d":4.1333,"c":6.2},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":0,"d":4.0,"c":5.6},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":0,"d":4.6667,"c":6.0},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":1,"d":3.4,"c":3.8},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":1,"d":3.4,"c":3.8},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":1,"d":3.4,"c":3.8},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":1,"d":3.4,"c":3.8},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":1,"d":3.4,"c":3.8},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":3,"d":2.9333,"c":2.9333},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":3,"d":3.1333,"c":3.2},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":3,"d":3.0,"c":3.4},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":3,"d":3.0,"c":3.4},{"f":"ghz_star","n":16,"t":"cairo_heavy_hex_27","l":3,"d":2.9333,"c":3.1333},{"f":"ghz_star","n":20,"t":"line_27","l":0,"d":4.5789,"c":5.1053},{"f":"ghz_star","n":20,"t":"line_27","l":0,"d":4.1579,"c":5.1053},{"f":"ghz_star","n":20,"t":"line_27","l":0,"d":4.1579,"c":5.5789},{"f":"ghz_star","n":20,"t":"line_27","l":0,"d":4.7895,"c":5.5789},{"f":"ghz_star","n":20,"t":"line_27","l":0,"d":4.6842,"c":5.8947},{"f":"ghz_star","n":20,"t":"line_27","l":1,"d":3.6842,"c":3.6842},{"f":"ghz_star","n":20,"t":"line_27","l":1,"d":3.6842,"c":3.6842},{"f":"ghz_star","n":20,"t":"line_27","l":1,"d":3.6842,"c":3.6842},{"f":"ghz_star","n":20,"t":"line_27","l":1,"d":3.6842,"c":3.6842},{"f":"ghz_star","n":20,"t":"line_27","l":1,"d":3.6842,"c":3.6842},{"f":"ghz_star","n":20,"t":"line_27","l":3,"d":2.1053,"c":2.1053},{"f":"ghz_star","n":20,"t":"line_27","l":3,"d":2.1053,"c":2.1053},{"f":"ghz_star","n":20,"t":"line_27","l":3,"d":1.8947,"c":1.8947},{"f":"ghz_star","n":20,"t":"line_27","l":3,"d":1.8947,"c":1.8947},{"f":"ghz_star","n":20,"t":"line_27","l":3,"d":1.8947,"c":1.8947},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":0,"d":5.1579,"c":7.4737},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":0,"d":4.1579,"c":7.0},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":0,"d":4.4211,"c":6.8421},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":0,"d":4.1053,"c":6.2105},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":0,"d":4.5263,"c":6.3684},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":1,"d":3.4211,"c":4.0},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":1,"d":3.8421,"c":4.0},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":1,"d":3.6842,"c":3.8421},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":1,"d":3.4211,"c":4.0},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":1,"d":3.5263,"c":3.6842},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":3,"d":3.4737,"c":3.4737},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":3,"d":2.7895,"c":3.0},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":3,"d":3.4211,"c":3.7368},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":3,"d":2.8947,"c":2.8947},{"f":"ghz_star","n":20,"t":"cairo_heavy_hex_27","l":3,"d":3.3684,"c":3.4211},{"f":"ghz_star","n":24,"t":"line_27","l":0,"d":4.4783,"c":5.0435},{"f":"ghz_star","n":24,"t":"line_27","l":0,"d":4.2609,"c":5.5652},{"f":"ghz_star","n":24,"t":"line_27","l":0,"d":4.1304,"c":5.8261},{"f":"ghz_star","n":24,"t":"line_27","l":0,"d":4.6522,"c":5.4348},{"f":"ghz_star","n":24,"t":"line_27","l":0,"d":4.8696,"c":6.087},{"f":"ghz_star","n":24,"t":"line_27","l":1,"d":3.7391,"c":3.7391},{"f":"ghz_star","n":24,"t":"line_27","l":1,"d":3.7391,"c":3.7391},{"f":"ghz_star","n":24,"t":"line_27","l":1,"d":3.7391,"c":3.7391},{"f":"ghz_star","n":24,"t":"line_27","l":1,"d":3.7391,"c":3.7391},{"f":"ghz_star","n":24,"t":"line_27","l":1,"d":3.7391,"c":3.7391},{"f":"ghz_star","n":24,"t":"line_27","l":3,"d":2.087,"c":2.087},{"f":"ghz_star","n":24,"t":"line_27","l":3,"d":2.087,"c":2.087},{"f":"ghz_star","n":24,"t":"line_27","l":3,"d":2.087,"c":2.087},{"f":"ghz_star","n":24,"t":"line_27","l":3,"d":2.087,"c":2.087},{"f":"ghz_star","n":24,"t":"line_27","l":3,"d":2.087,"c":2.087},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":0,"d":5.3478,"c":7.6522},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":0,"d":4.3913,"c":7.1304},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":0,"d":4.8696,"c":7.6522},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":0,"d":4.4783,"c":7.0},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":0,"d":4.9565,"c":7.6522},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":1,"d":3.8261,"c":3.8696},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":1,"d":4.0,"c":4.0},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":1,"d":3.8261,"c":3.8696},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":1,"d":3.913,"c":4.1304},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":1,"d":3.8696,"c":3.8696},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":3,"d":3.3478,"c":3.5217},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":3,"d":3.4783,"c":3.4783},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":3,"d":3.2609,"c":3.3043},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":3,"d":3.3913,"c":3.3913},{"f":"ghz_star","n":24,"t":"cairo_heavy_hex_27","l":3,"d":3.2609,"c":3.5652},{"f":"efficient_su2","n":4,"t":"line_27","l":0,"d":3.625,"c":4.0},{"f":"efficient_su2","n":4,"t":"line_27","l":0,"d":3.5,"c":4.0},{"f":"efficient_su2","n":4,"t":"line_27","l":0,"d":3.375,"c":4.0},{"f":"efficient_su2","n":4,"t":"line_27","l":0,"d":3.75,"c":4.0},{"f":"efficient_su2","n":4,"t":"line_27","l":0,"d":3.25,"c":4.375},{"f":"efficient_su2","n":4,"t":"line_27","l":1,"d":2.25,"c":3.0},{"f":"efficient_su2","n":4,"t":"line_27","l":1,"d":2.125,"c":3.25},{"f":"efficient_su2","n":4,"t":"line_27","l":1,"d":2.125,"c":3.25},{"f":"efficient_su2","n":4,"t":"line_27","l":1,"d":2.125,"c":3.25},{"f":"efficient_su2","n":4,"t":"line_27","l":1,"d":2.125,"c":3.25},{"f":"efficient_su2","n":4,"t":"line_27","l":3,"d":1.75,"c":2.5},{"f":"efficient_su2","n":4,"t":"line_27","l":3,"d":2.0,"c":2.5},{"f":"efficient_su2","n":4,"t":"line_27","l":3,"d":1.75,"c":2.5},{"f":"efficient_su2","n":4,"t":"line_27","l":3,"d":1.75,"c":2.5},{"f":"efficient_su2","n":4,"t":"line_27","l":3,"d":1.75,"c":2.5},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":0,"d":3.625,"c":4.0},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":0,"d":3.5,"c":4.0},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":0,"d":3.375,"c":4.0},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":0,"d":3.75,"c":4.0},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":0,"d":3.25,"c":4.375},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":1,"d":2.125,"c":2.125},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":1,"d":2.125,"c":2.125},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":1,"d":2.125,"c":2.125},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":1,"d":2.125,"c":2.125},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":1,"d":2.125,"c":2.125},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":3,"d":2.125,"c":2.125},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":3,"d":2.125,"c":2.125},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":3,"d":2.125,"c":2.125},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":3,"d":2.125,"c":2.125},{"f":"efficient_su2","n":4,"t":"cairo_heavy_hex_27","l":3,"d":2.125,"c":2.125},{"f":"efficient_su2","n":8,"t":"line_27","l":0,"d":4.3125,"c":5.5},{"f":"efficient_su2","n":8,"t":"line_27","l":0,"d":4.3125,"c":5.5},{"f":"efficient_su2","n":8,"t":"line_27","l":0,"d":3.3125,"c":5.875},{"f":"efficient_su2","n":8,"t":"line_27","l":0,"d":4.0,"c":5.6875},{"f":"efficient_su2","n":8,"t":"line_27","l":0,"d":4.375,"c":5.6875},{"f":"efficient_su2","n":8,"t":"line_27","l":1,"d":3.125,"c":3.5},{"f":"efficient_su2","n":8,"t":"line_27","l":1,"d":3.125,"c":3.5},{"f":"efficient_su2","n":8,"t":"line_27","l":1,"d":3.125,"c":3.5},{"f":"efficient_su2","n":8,"t":"line_27","l":1,"d":3.125,"c":3.5},{"f":"efficient_su2","n":8,"t":"line_27","l":1,"d":3.125,"c":3.5},{"f":"efficient_su2","n":8,"t":"line_27","l":3,"d":2.875,"c":3.25},{"f":"efficient_su2","n":8,"t":"line_27","l":3,"d":2.875,"c":3.25},{"f":"efficient_su2","n":8,"t":"line_27","l":3,"d":2.875,"c":3.25},{"f":"efficient_su2","n":8,"t":"line_27","l":3,"d":2.875,"c":3.25},{"f":"efficient_su2","n":8,"t":"line_27","l":3,"d":2.875,"c":3.25},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.375,"c":4.75},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.3125,"c":5.5},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.6875,"c":5.6875},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":0,"d":4.25,"c":5.5},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":0,"d":3.6875,"c":4.375},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":1,"d":2.9375,"c":3.3125},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":1,"d":2.5,"c":2.5},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":1,"d":3.125,"c":3.3125},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":1,"d":2.375,"c":3.25},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":1,"d":2.5,"c":2.5},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.5,"c":2.5},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.5,"c":2.5},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.5,"c":2.5},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.5,"c":2.5},{"f":"efficient_su2","n":8,"t":"cairo_heavy_hex_27","l":3,"d":2.5,"c":2.5},{"f":"efficient_su2","n":12,"t":"line_27","l":0,"d":4.2917,"c":6.125},{"f":"efficient_su2","n":12,"t":"line_27","l":0,"d":4.2917,"c":6.25},{"f":"efficient_su2","n":12,"t":"line_27","l":0,"d":4.375,"c":6.375},{"f":"efficient_su2","n":12,"t":"line_27","l":0,"d":4.25,"c":6.125},{"f":"efficient_su2","n":12,"t":"line_27","l":0,"d":4.5,"c":6.5},{"f":"efficient_su2","n":12,"t":"line_27","l":1,"d":3.4167,"c":3.6667},{"f":"efficient_su2","n":12,"t":"line_27","l":1,"d":3.4167,"c":3.6667},{"f":"efficient_su2","n":12,"t":"line_27","l":1,"d":3.4167,"c":3.6667},{"f":"efficient_su2","n":12,"t":"line_27","l":1,"d":3.4167,"c":3.6667},{"f":"efficient_su2","n":12,"t":"line_27","l":1,"d":3.4167,"c":3.6667},{"f":"efficient_su2","n":12,"t":"line_27","l":3,"d":3.25,"c":3.5},{"f":"efficient_su2","n":12,"t":"line_27","l":3,"d":3.25,"c":3.5},{"f":"efficient_su2","n":12,"t":"line_27","l":3,"d":3.25,"c":3.5},{"f":"efficient_su2","n":12,"t":"line_27","l":3,"d":3.25,"c":3.5},{"f":"efficient_su2","n":12,"t":"line_27","l":3,"d":3.25,"c":3.5},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":0,"d":5.1667,"c":7.875},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":0,"d":4.125,"c":7.25},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":0,"d":4.2917,"c":7.375},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":0,"d":4.4583,"c":7.125},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":0,"d":3.8333,"c":7.25},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"efficient_su2","n":12,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"efficient_su2","n":16,"t":"line_27","l":0,"d":4.5938,"c":6.7188},{"f":"efficient_su2","n":16,"t":"line_27","l":0,"d":4.0938,"c":6.25},{"f":"efficient_su2","n":16,"t":"line_27","l":0,"d":4.2812,"c":6.5312},{"f":"efficient_su2","n":16,"t":"line_27","l":0,"d":4.1875,"c":6.7188},{"f":"efficient_su2","n":16,"t":"line_27","l":0,"d":4.125,"c":6.625},{"f":"efficient_su2","n":16,"t":"line_27","l":1,"d":3.5625,"c":3.75},{"f":"efficient_su2","n":16,"t":"line_27","l":1,"d":3.5625,"c":3.75},{"f":"efficient_su2","n":16,"t":"line_27","l":1,"d":3.5625,"c":3.75},{"f":"efficient_su2","n":16,"t":"line_27","l":1,"d":3.5625,"c":3.75},{"f":"efficient_su2","n":16,"t":"line_27","l":1,"d":3.5625,"c":3.75},{"f":"efficient_su2","n":16,"t":"line_27","l":3,"d":3.4375,"c":3.625},{"f":"efficient_su2","n":16,"t":"line_27","l":3,"d":3.4375,"c":3.625},{"f":"efficient_su2","n":16,"t":"line_27","l":3,"d":3.4375,"c":3.625},{"f":"efficient_su2","n":16,"t":"line_27","l":3,"d":3.4375,"c":3.625},{"f":"efficient_su2","n":16,"t":"line_27","l":3,"d":3.4375,"c":3.625},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":0,"d":3.9688,"c":6.5312},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":0,"d":3.4062,"c":5.125},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":0,"d":5.1875,"c":7.75},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":0,"d":4.6875,"c":7.0938},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":0,"d":4.7188,"c":6.7188},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":1,"d":2.5312,"c":2.875},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":1,"d":2.6875,"c":3.5312},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":1,"d":3.25,"c":3.4375},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":1,"d":2.6875,"c":3.5312},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":1,"d":2.875,"c":3.1562},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":3,"d":1.9375,"c":2.2188},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":3,"d":2.7188,"c":2.9062},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":3,"d":2.75,"c":2.9375},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":3,"d":1.8438,"c":2.0938},{"f":"efficient_su2","n":16,"t":"cairo_heavy_hex_27","l":3,"d":2.5,"c":2.7812},{"f":"efficient_su2","n":20,"t":"line_27","l":0,"d":4.475,"c":6.85},{"f":"efficient_su2","n":20,"t":"line_27","l":0,"d":4.45,"c":6.775},{"f":"efficient_su2","n":20,"t":"line_27","l":0,"d":4.7,"c":6.7},{"f":"efficient_su2","n":20,"t":"line_27","l":0,"d":4.225,"c":7.15},{"f":"efficient_su2","n":20,"t":"line_27","l":0,"d":4.45,"c":6.625},{"f":"efficient_su2","n":20,"t":"line_27","l":1,"d":3.65,"c":3.8},{"f":"efficient_su2","n":20,"t":"line_27","l":1,"d":3.65,"c":3.8},{"f":"efficient_su2","n":20,"t":"line_27","l":1,"d":3.65,"c":3.8},{"f":"efficient_su2","n":20,"t":"line_27","l":1,"d":3.65,"c":3.8},{"f":"efficient_su2","n":20,"t":"line_27","l":1,"d":3.65,"c":3.8},{"f":"efficient_su2","n":20,"t":"line_27","l":3,"d":3.55,"c":3.7},{"f":"efficient_su2","n":20,"t":"line_27","l":3,"d":3.55,"c":3.7},{"f":"efficient_su2","n":20,"t":"line_27","l":3,"d":3.55,"c":3.7},{"f":"efficient_su2","n":20,"t":"line_27","l":3,"d":3.55,"c":3.7},{"f":"efficient_su2","n":20,"t":"line_27","l":3,"d":3.55,"c":3.7},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":0,"d":5.175,"c":8.05},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":0,"d":5.725,"c":8.95},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":0,"d":5.85,"c":8.2},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":0,"d":5.025,"c":8.2},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":0,"d":4.45,"c":7.225},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":1,"d":1.0,"c":1.0},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"efficient_su2","n":20,"t":"cairo_heavy_hex_27","l":3,"d":1.0,"c":1.0},{"f":"efficient_su2","n":24,"t":"line_27","l":0,"d":4.1042,"c":7.0},{"f":"efficient_su2","n":24,"t":"line_27","l":0,"d":4.625,"c":6.875},{"f":"efficient_su2","n":24,"t":"line_27","l":0,"d":4.625,"c":6.875},{"f":"efficient_su2","n":24,"t":"line_27","l":0,"d":4.2917,"c":7.1875},{"f":"efficient_su2","n":24,"t":"line_27","l":0,"d":4.5625,"c":6.625},{"f":"efficient_su2","n":24,"t":"line_27","l":1,"d":3.8958,"c":4.0},{"f":"efficient_su2","n":24,"t":"line_27","l":1,"d":3.8958,"c":4.0},{"f":"efficient_su2","n":24,"t":"line_27","l":1,"d":3.8958,"c":4.0},{"f":"efficient_su2","n":24,"t":"line_27","l":1,"d":3.8958,"c":4.0},{"f":"efficient_su2","n":24,"t":"line_27","l":1,"d":3.8958,"c":4.0},{"f":"efficient_su2","n":24,"t":"line_27","l":3,"d":3.7292,"c":3.8333},{"f":"efficient_su2","n":24,"t":"line_27","l":3,"d":3.7083,"c":3.8333},{"f":"efficient_su2","n":24,"t":"line_27","l":3,"d":3.6458,"c":3.8958},{"f":"efficient_su2","n":24,"t":"line_27","l":3,"d":3.6458,"c":3.8958},{"f":"efficient_su2","n":24,"t":"line_27","l":3,"d":3.7292,"c":3.8333},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":0,"d":5.4583,"c":8.25},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":0,"d":5.1667,"c":8.4375},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":0,"d":5.0208,"c":8.5625},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":0,"d":5.25,"c":8.8125},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":0,"d":5.4583,"c":8.8125},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":1,"d":3.125,"c":3.75},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":1,"d":3.125,"c":3.75},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":1,"d":3.25,"c":3.6875},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":1,"d":3.25,"c":3.625},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":1,"d":3.125,"c":3.75},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":3,"d":2.6875,"c":3.0},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":3,"d":2.1458,"c":2.5625},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":3,"d":2.6667,"c":3.1667},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":3,"d":2.1667,"c":2.4792},{"f":"efficient_su2","n":24,"t":"cairo_heavy_hex_27","l":3,"d":2.375,"c":2.5625}]}</script>
+<script>
+(function () {
+  "use strict";
+
+  var DATA = JSON.parse(document.getElementById("viz-data").textContent);
+
+  var FAMILY_ORDER = ["efficient_su2", "ghz_chain", "ghz_star", "qft"];
+  var FAMILY_LABELS = {
+    efficient_su2: "Efficient SU(2)",
+    ghz_chain: "GHZ chain",
+    ghz_star: "GHZ star",
+    qft: "QFT"
+  };
+  var TOPOLOGIES = ["line_27", "cairo_heavy_hex_27"];
+  var TOPOLOGY_LABELS = { line_27: "Line", cairo_heavy_hex_27: "Cairo heavy-hex" };
+  var TOPOLOGY_COLOR_VAR = { line_27: "--series-line", cairo_heavy_hex_27: "--series-cairo" };
+  var LEVELS = [0, 1, 3];
+  var LEVEL_LABELS = { 0: "L0", 1: "L1", 3: "L3" };
+  var LEVEL_DASH = { 0: "1.5,3", 1: "7,4", 3: "none" };
+  var METRICS = ["two_qubit_depth_penalty", "two_qubit_count_penalty"];
+  var METRIC_LABELS = {
+    two_qubit_depth_penalty: "2Q depth penalty",
+    two_qubit_count_penalty: "2Q gate-count penalty"
+  };
+  var SIZES = [4, 8, 12, 16, 20, 24];
+
+  var state = {
+    metric: "two_qubit_depth_penalty",
+    topologies: new Set(TOPOLOGIES),
+    levels: new Set([1, 3])
+  };
+
+  var root = getComputedStyle(document.documentElement);
+  function cssVar(name) { return root.getPropertyValue(name).trim(); }
+
+  // ---- index summary rows: byIndex[metric][family][topology][level] = [{n, median, q25, q75, count}] ----
+  var byIndex = {};
+  METRICS.forEach(function (m) { byIndex[m] = {}; });
+  DATA.summary.forEach(function (row) {
+    var m = byIndex[row.metric];
+    if (!m) return;
+    m[row.circuit_family] = m[row.circuit_family] || {};
+    m[row.circuit_family][row.topology] = m[row.circuit_family][row.topology] || {};
+    var arr = m[row.circuit_family][row.topology][row.optimization_level] =
+      m[row.circuit_family][row.topology][row.optimization_level] || [];
+    arr.push({ n: row.logical_qubits, median: row.median, q25: row.q25, q75: row.q75, count: row.count });
+  });
+  Object.keys(byIndex).forEach(function (m) {
+    Object.keys(byIndex[m]).forEach(function (f) {
+      Object.keys(byIndex[m][f]).forEach(function (t) {
+        Object.keys(byIndex[m][f][t]).forEach(function (l) {
+          byIndex[m][f][t][l].sort(function (a, b) { return a.n - b.n; });
+        });
+      });
+    });
+  });
+
+  function median(values) {
+    var sorted = values.slice().sort(function (a, b) { return a - b; });
+    var mid = Math.floor(sorted.length / 2);
+    if (sorted.length % 2) return sorted[mid];
+    return (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+
+  function pooled(topology) {
+    var key = state.metric === "two_qubit_depth_penalty" ? "d" : "c";
+    var values = [];
+    DATA.raw.forEach(function (row) {
+      if (row.t !== topology) return;
+      if (!state.levels.has(row.l)) return;
+      var v = row[key];
+      if (v !== null && v !== undefined) values.push(v);
+    });
+    return { median: values.length ? median(values) : null, n: values.length };
+  }
+
+  // ---------------- stat tiles ----------------
+  var statsEl = document.getElementById("stats");
+  function renderStats() {
+    var line = pooled("line_27");
+    var cairo = pooled("cairo_heavy_hex_27");
+    var levelList = LEVELS.filter(function (l) { return state.levels.has(l); }).map(function (l) { return LEVEL_LABELS[l]; }).join("+") || "none";
+    var metricLabel = METRIC_LABELS[state.metric];
+
+    var tiles = [];
+    if (state.topologies.has("line_27")) {
+      tiles.push({
+        cls: "stat--line",
+        label: "Line · median " + metricLabel,
+        value: line.median === null ? "—" : line.median.toFixed(3) + "×",
+        sub: "pooled " + levelList + " · n=" + line.n
+      });
+    }
+    if (state.topologies.has("cairo_heavy_hex_27")) {
+      tiles.push({
+        cls: "stat--cairo",
+        label: "Cairo heavy-hex · median " + metricLabel,
+        value: cairo.median === null ? "—" : cairo.median.toFixed(3) + "×",
+        sub: "pooled " + levelList + " · n=" + cairo.n
+      });
+    }
+    if (state.topologies.has("line_27") && state.topologies.has("cairo_heavy_hex_27")) {
+      var compareLabel = "—", compareSub = "select at least one level";
+      if (line.median !== null && cairo.median !== null) {
+        if (cairo.median > line.median) {
+          compareLabel = (cairo.median / line.median).toFixed(2) + "×";
+          compareSub = "Cairo costlier than line, right now";
+        } else if (line.median > cairo.median) {
+          compareLabel = (line.median / cairo.median).toFixed(2) + "×";
+          compareSub = "Line costlier than Cairo, right now";
+        } else {
+          compareLabel = "1.00×";
+          compareSub = "tied, right now";
+        }
+      }
+      tiles.push({ cls: "", label: "Gap between maps", value: compareLabel, sub: compareSub });
+    }
+
+    statsEl.innerHTML = "";
+    tiles.forEach(function (t) {
+      var div = document.createElement("div");
+      div.className = "stat " + t.cls;
+      var l = document.createElement("div"); l.className = "stat-label"; l.textContent = t.label;
+      var v = document.createElement("div"); v.className = "stat-value"; v.textContent = t.value;
+      var s = document.createElement("div"); s.className = "stat-sub"; s.textContent = t.sub;
+      div.appendChild(l); div.appendChild(v); div.appendChild(s);
+      statsEl.appendChild(div);
+    });
+  }
+
+  // ---------------- controls ----------------
+  var metricSeg = document.getElementById("metric-seg");
+  METRICS.forEach(function (m) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = METRIC_LABELS[m];
+    btn.setAttribute("aria-pressed", String(m === state.metric));
+    btn.addEventListener("click", function () {
+      state.metric = m;
+      Array.prototype.forEach.call(metricSeg.children, function (c) {
+        c.setAttribute("aria-pressed", String(c === btn));
+      });
+      renderAll();
+    });
+    metricSeg.appendChild(btn);
+  });
+
+  var topoChips = document.getElementById("topology-chips");
+  TOPOLOGIES.forEach(function (t) {
+    var chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.dataset.series = t === "line_27" ? "line" : "cairo";
+    chip.setAttribute("aria-pressed", "true");
+    chip.style.color = cssVar(TOPOLOGY_COLOR_VAR[t]);
+    var sw = document.createElement("span"); sw.className = "swatch";
+    var label = document.createElement("span"); label.textContent = TOPOLOGY_LABELS[t];
+    chip.appendChild(sw); chip.appendChild(label);
+    chip.addEventListener("click", function () {
+      var on = chip.getAttribute("aria-pressed") === "true";
+      if (on && state.topologies.size === 1) return; // keep at least one visible
+      if (on) { state.topologies.delete(t); chip.setAttribute("aria-pressed", "false"); }
+      else { state.topologies.add(t); chip.setAttribute("aria-pressed", "true"); }
+      renderAll();
+    });
+    topoChips.appendChild(chip);
+  });
+
+  var levelChips = document.getElementById("level-chips");
+  LEVELS.forEach(function (l) {
+    var chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip" + (l === 0 ? " is-caution" : "");
+    chip.dataset.level = l;
+    chip.setAttribute("aria-pressed", String(state.levels.has(l)));
+    chip.textContent = LEVEL_LABELS[l];
+    if (l === 0) chip.title = "TrivialLayout identity-index confound — see note below";
+    chip.addEventListener("click", function () {
+      var on = chip.getAttribute("aria-pressed") === "true";
+      if (on && state.levels.size === 1) return;
+      if (on) { state.levels.delete(l); chip.setAttribute("aria-pressed", "false"); }
+      else { state.levels.add(l); chip.setAttribute("aria-pressed", "true"); }
+      renderAll();
+    });
+    levelChips.appendChild(chip);
+  });
+
+  // ---------------- legend ----------------
+  var legendEl = document.getElementById("legend");
+  function renderLegend() {
+    legendEl.innerHTML = "";
+    var mapGroup = document.createElement("div"); mapGroup.className = "legend-group";
+    var mapLabel = document.createElement("span"); mapLabel.className = "legend-group-label"; mapLabel.textContent = "Coupling map";
+    mapGroup.appendChild(mapLabel);
+    TOPOLOGIES.concat(["complete_27"]).forEach(function (t) {
+      if (t !== "complete_27" && !state.topologies.has(t)) return;
+      var item = document.createElement("span"); item.className = "legend-item";
+      var key = document.createElement("span"); key.className = "legend-key";
+      var color = t === "complete_27" ? cssVar("--series-complete") : cssVar(TOPOLOGY_COLOR_VAR[t]);
+      key.style.borderTopColor = color;
+      if (t === "complete_27") key.style.borderTopStyle = "dashed";
+      var label = document.createElement("span");
+      label.textContent = t === "complete_27" ? "Complete (baseline, = 1×)" : TOPOLOGY_LABELS[t];
+      item.appendChild(key); item.appendChild(label);
+      mapGroup.appendChild(item);
+    });
+    legendEl.appendChild(mapGroup);
+
+    var lvlGroup = document.createElement("div"); lvlGroup.className = "legend-group";
+    var lvlLabel = document.createElement("span"); lvlLabel.className = "legend-group-label"; lvlLabel.textContent = "Level (stroke)";
+    lvlGroup.appendChild(lvlLabel);
+    LEVELS.forEach(function (l) {
+      if (!state.levels.has(l)) return;
+      var item = document.createElement("span"); item.className = "legend-item";
+      var key = document.createElement("span"); key.className = "legend-key";
+      key.style.borderTopColor = cssVar("--ink-secondary");
+      key.style.borderTopStyle = l === 3 ? "solid" : "dashed";
+      if (l === 0) key.style.borderTopStyle = "dotted";
+      var label = document.createElement("span"); label.textContent = LEVEL_LABELS[l];
+      item.appendChild(key); item.appendChild(label);
+      lvlGroup.appendChild(item);
+    });
+    legendEl.appendChild(lvlGroup);
+  }
+
+  // ---------------- chart geometry ----------------
+  var W = 460, H = 250, ML = 40, MR = 10, MT = 10, MB = 26;
+  var PW = W - ML - MR, PH = H - MT - MB;
+
+  function xPos(n) {
+    var i = SIZES.indexOf(n);
+    return ML + (i / (SIZES.length - 1)) * PW;
+  }
+  function niceCeil(v) {
+    if (v <= 2) return Math.ceil(v * 4) / 4;
+    if (v <= 5) return Math.ceil(v * 2) / 2;
+    return Math.ceil(v);
+  }
+
+  function computeYMax() {
+    var max = 1;
+    FAMILY_ORDER.forEach(function (f) {
+      TOPOLOGIES.forEach(function (t) {
+        if (!state.topologies.has(t)) return;
+        LEVELS.forEach(function (l) {
+          if (!state.levels.has(l)) return;
+          var series = ((byIndex[state.metric][f] || {})[t] || {})[l] || [];
+          series.forEach(function (p) { if (p.q75 > max) max = p.q75; });
+        });
+      });
+    });
+    return niceCeil(max * 1.12);
+  }
+
+  var tooltip = document.getElementById("tooltip");
+  function showTooltip(evt, html) {
+    tooltip.innerHTML = "";
+    html.forEach(function (node) { tooltip.appendChild(node); });
+    tooltip.classList.add("visible");
+    positionTooltip(evt);
+  }
+  function positionTooltip(evt) {
+    var x = (evt.clientX !== undefined ? evt.clientX : (evt.target.getBoundingClientRect().left));
+    var y = (evt.clientY !== undefined ? evt.clientY : (evt.target.getBoundingClientRect().top));
+    var pad = 14;
+    tooltip.style.left = Math.min(x + pad, window.innerWidth - 230) + "px";
+    tooltip.style.top = Math.max(y - 10, 8) + "px";
+  }
+  function hideTooltip() { tooltip.classList.remove("visible"); }
+
+  function ttRow(label, value) {
+    var row = document.createElement("div"); row.className = "tt-row";
+    var l = document.createElement("span"); l.textContent = label;
+    var v = document.createElement("span"); v.textContent = value;
+    row.appendChild(l); row.appendChild(v);
+    return row;
+  }
+
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    Object.keys(attrs || {}).forEach(function (k) { el.setAttribute(k, attrs[k]); });
+    return el;
+  }
+
+  function renderPanel(family) {
+    var panel = document.createElement("div"); panel.className = "panel";
+    var title = document.createElement("div"); title.className = "panel-title"; title.textContent = FAMILY_LABELS[family];
+    panel.appendChild(title);
+
+    var yMax = computeYMax();
+    var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": FAMILY_LABELS[family] + " routing penalty chart" });
+
+    function yPos(v) { return MT + PH - (v / yMax) * PH; }
+
+    // gridlines + y ticks
+    var steps = 4;
+    for (var s = 0; s <= steps; s++) {
+      var val = (yMax / steps) * s;
+      var y = yPos(val);
+      svg.appendChild(svgEl("line", { class: "gridline", x1: ML, x2: W - MR, y1: y, y2: y }));
+      var t = svgEl("text", { class: "axis-tick", x: ML - 6, y: y + 3, "text-anchor": "end" });
+      t.textContent = (Math.round(val * 100) / 100) + "×";
+      svg.appendChild(t);
+    }
+    // x ticks
+    SIZES.forEach(function (n) {
+      var t = svgEl("text", { class: "axis-tick", x: xPos(n), y: H - 6, "text-anchor": "middle" });
+      t.textContent = n;
+      svg.appendChild(t);
+    });
+
+    // baseline
+    var by = yPos(1);
+    svg.appendChild(svgEl("line", { class: "baseline", x1: ML, x2: W - MR, y1: by, y2: by }));
+
+    var anySeries = false;
+    TOPOLOGIES.forEach(function (t) {
+      if (!state.topologies.has(t)) return;
+      var color = cssVar(TOPOLOGY_COLOR_VAR[t]);
+      LEVELS.forEach(function (l) {
+        if (!state.levels.has(l)) return;
+        var series = ((byIndex[state.metric][family] || {})[t] || {})[l] || [];
+        if (!series.length) return;
+        anySeries = true;
+
+        // IQR band
+        var bandPts = series.map(function (p) { return [xPos(p.n), yPos(p.q75)]; })
+          .concat(series.slice().reverse().map(function (p) { return [xPos(p.n), yPos(p.q25)]; }));
+        var bandD = "M" + bandPts.map(function (p) { return p[0] + "," + p[1]; }).join(" L") + " Z";
+        svg.appendChild(svgEl("path", { d: bandD, fill: color, "fill-opacity": "0.12", stroke: "none" }));
+
+        // median line
+        var lineD = "M" + series.map(function (p) { return xPos(p.n) + "," + yPos(p.median); }).join(" L");
+        svg.appendChild(svgEl("path", {
+          d: lineD, fill: "none", stroke: color, "stroke-width": "2",
+          "stroke-dasharray": LEVEL_DASH[l], "stroke-linecap": "round", "stroke-linejoin": "round"
+        }));
+
+        // points + hit targets
+        series.forEach(function (p) {
+          var cx = xPos(p.n), cy = yPos(p.median);
+          svg.appendChild(svgEl("circle", { cx: cx, cy: cy, r: 3.4, fill: color, stroke: cssVar("--bg-raised"), "stroke-width": "1.6" }));
+          var hit = svgEl("circle", { cx: cx, cy: cy, r: 11, class: "hit", tabindex: "0" });
+          var meta = { family: family, topology: t, level: l, p: p };
+          function onEnter(evt) {
+            showTooltip(evt, buildTooltip(meta));
+          }
+          hit.addEventListener("mousemove", onEnter);
+          hit.addEventListener("mouseenter", onEnter);
+          hit.addEventListener("mouseleave", hideTooltip);
+          hit.addEventListener("focus", function (evt) {
+            var r = hit.getBoundingClientRect();
+            showTooltip({ clientX: r.left, clientY: r.top }, buildTooltip(meta));
+          });
+          hit.addEventListener("blur", hideTooltip);
+          svg.appendChild(hit);
+        });
+      });
+    });
+
+    panel.appendChild(svg);
+    if (!anySeries) {
+      var note = document.createElement("div"); note.className = "empty-note";
+      note.textContent = "No series selected — pick a coupling map and a level above.";
+      panel.appendChild(note);
+    }
+    return panel;
+  }
+
+  function buildTooltip(meta) {
+    var nodes = [];
+    var titleEl = document.createElement("div"); titleEl.className = "tt-title";
+    titleEl.textContent = FAMILY_LABELS[meta.family] + ", n=" + meta.p.n;
+    nodes.push(titleEl);
+    var valueEl = document.createElement("div"); valueEl.className = "tt-value";
+    valueEl.textContent = meta.p.median.toFixed(3) + "×";
+    nodes.push(valueEl);
+    nodes.push(ttRow(TOPOLOGY_LABELS[meta.topology] + " · " + LEVEL_LABELS[meta.level], "median"));
+    nodes.push(ttRow("IQR", meta.p.q25.toFixed(3) + "–" + meta.p.q75.toFixed(3)));
+    nodes.push(ttRow("seeds", String(meta.p.count)));
+    return nodes;
+  }
+
+  var chartsEl = document.getElementById("charts");
+  function renderCharts() {
+    chartsEl.innerHTML = "";
+    FAMILY_ORDER.forEach(function (f) { chartsEl.appendChild(renderPanel(f)); });
+  }
+
+  // ---------------- table view ----------------
+  var tableEl = document.getElementById("data-table");
+  function renderTable() {
+    var cols = ["Family", "Map", "Level", "n", "median", "q25", "q75", "seeds"];
+    var thead = document.createElement("thead");
+    var htr = document.createElement("tr");
+    cols.forEach(function (c) { var th = document.createElement("th"); th.textContent = c; htr.appendChild(th); });
+    thead.appendChild(htr);
+
+    var tbody = document.createElement("tbody");
+    FAMILY_ORDER.forEach(function (f) {
+      TOPOLOGIES.forEach(function (t) {
+        if (!state.topologies.has(t)) return;
+        LEVELS.forEach(function (l) {
+          if (!state.levels.has(l)) return;
+          var series = ((byIndex[state.metric][f] || {})[t] || {})[l] || [];
+          series.forEach(function (p) {
+            var tr = document.createElement("tr");
+            [FAMILY_LABELS[f], TOPOLOGY_LABELS[t], LEVEL_LABELS[l], p.n,
+              p.median.toFixed(4), p.q25.toFixed(4), p.q75.toFixed(4), p.count].forEach(function (v) {
+              var td = document.createElement("td"); td.textContent = v; tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          });
+        });
+      });
+    });
+
+    tableEl.innerHTML = "";
+    tableEl.appendChild(thead);
+    tableEl.appendChild(tbody);
+  }
+
+  // ---------------- footer ----------------
+  var footerEl = document.getElementById("footer");
+  function renderFooter() {
+    var prov = DATA.provenance;
+    var left = document.createElement("span");
+    left.textContent = "run " + prov.run_id + " · commit " + prov.git_commit.slice(0, 7) +
+      " · qiskit " + prov.qiskit_version + " · " + prov.config.transpiler_seeds.length + " seeds";
+    var right = document.createElement("span");
+    right.textContent = "full raw + summary JSON ships at output/data/quantum-routing-overhead-results.json";
+    footerEl.innerHTML = "";
+    footerEl.appendChild(left);
+    footerEl.appendChild(right);
+  }
+
+  function renderAll() {
+    renderStats();
+    renderCharts();
+    renderLegend();
+    renderTable();
+  }
+
+  renderFooter();
+  renderAll();
+
+  window.addEventListener("resize", function () {
+    // viewBox-based SVG scales via CSS; nothing to recompute on resize.
+  });
+})();
+</script>
