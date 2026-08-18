@@ -30,7 +30,13 @@ import pandas as pd
 
 from routing_overhead.aggregation import GROUP_KEYS, geometric_mean
 from routing_overhead.experiments import atomic_write
-from routing_overhead.topologies import RELABELLED_BASES, base_topology, is_relabelled
+from routing_overhead.topologies import (
+    RELABELLED_BASES,
+    base_topology,
+    is_relabelled,
+    is_sweep,
+    sweep_index,
+)
 
 PRIMARY_METRIC = "two_qubit_depth_penalty"
 
@@ -69,6 +75,136 @@ def available_controls(frame: pd.DataFrame) -> list[str]:
     )
 
 
+def available_sweeps(frame: pd.DataFrame) -> dict[str, int]:
+    """Base topologies carrying a relabelling sweep, and how many members are present."""
+    present = [name for name in frame["topology"].dropna().unique() if is_sweep(name)]
+    counts: dict[str, int] = {}
+    for name in present:
+        base = base_topology(name)
+        if base in set(frame["topology"].dropna().unique()):
+            counts[base] = counts.get(base, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def sweep_distribution(
+    frame: pd.DataFrame, metric: str = PRIMARY_METRIC, group=("optimization_level",)
+) -> pd.DataFrame:
+    """Where the study's own labelling falls among its relabellings.
+
+    One row per (base topology, grouping). `identity_rank` counts how many sweep members
+    came out *below* the identity labelling, so 0 means the study's maps produced the
+    most favourable result of every labelling tested and `sweep_members` means the least.
+
+    A single relabelling can only show that labelling matters somewhere. This shows
+    whether the labelling actually used is typical, and how wide the effect is.
+    """
+    working = frame[frame["success"].astype(bool)] if "success" in frame else frame
+    working = working.assign(**{metric: pd.to_numeric(working[metric], errors="coerce")})
+    working = working.dropna(subset=[metric])
+    working = working.assign(
+        base=working["topology"].map(base_topology),
+        is_sweep_member=working["topology"].map(is_sweep),
+        is_control=working["topology"].map(is_relabelled),
+    )
+    keys = list(group)
+    records = []
+    for (base, *rest), block in working.groupby(["base", *keys], dropna=False, sort=True):
+        sweep = block[block["is_sweep_member"]]
+        if sweep.empty:
+            continue
+        medians = sweep.groupby("topology")[metric].median().sort_values()
+        identity = block[~block["is_control"]][metric]
+        named = block[block["is_control"] & ~block["is_sweep_member"]][metric]
+        identity_median = float(identity.median()) if not identity.empty else float("nan")
+        below = int((medians < identity_median).sum()) if not identity.empty else -1
+        records.append(
+            {
+                "base_topology": base,
+                **dict(zip(keys, rest)),
+                "sweep_members": int(medians.size),
+                "identity_median": identity_median,
+                "named_control_median": (
+                    float(named.median()) if not named.empty else float("nan")
+                ),
+                "sweep_min": float(medians.min()),
+                "sweep_q25": float(medians.quantile(0.25)),
+                "sweep_median": float(medians.median()),
+                "sweep_q75": float(medians.quantile(0.75)),
+                "sweep_max": float(medians.max()),
+                "sweep_geometric_mean": geometric_mean(medians.to_numpy()),
+                "spread_ratio": float(medians.max() / medians.min()),
+                "identity_rank": below,
+                "identity_percentile": (
+                    100.0 * below / medians.size if below >= 0 else float("nan")
+                ),
+            }
+        )
+    return pd.DataFrame.from_records(records)
+
+
+def ranking_robustness(
+    frame: pd.DataFrame,
+    left: str,
+    right: str,
+    metric: str = PRIMARY_METRIC,
+    exclude_levels=(0,),
+) -> pd.DataFrame:
+    """How often each circuit family's topology ranking survives relabelling.
+
+    For every sweep index the two base graphs are compared under the *same* permutation
+    index, so the pair differs only in connectivity. A ranking that flips with the
+    labelling is not a topology result.
+    """
+    working = frame[frame["success"].astype(bool)] if "success" in frame else frame
+    working = working[~working["optimization_level"].isin(exclude_levels)]
+    working = working.assign(**{metric: pd.to_numeric(working[metric], errors="coerce")})
+    working = working.dropna(subset=[metric])
+    working = working.assign(
+        base=working["topology"].map(base_topology),
+        index=working["topology"].map(sweep_index),
+    )
+    sweep = working[working["index"].notna()]
+    records = []
+    for family, block in sweep.groupby("circuit_family", dropna=False, sort=True):
+        left_wins = right_wins = ties = 0
+        lefts, rights = [], []
+        for index in sorted(block["index"].dropna().unique()):
+            cell = block[block["index"] == index]
+            left_median = cell[cell["base"] == left][metric].median()
+            right_median = cell[cell["base"] == right][metric].median()
+            if pd.isna(left_median) or pd.isna(right_median):
+                continue
+            lefts.append(float(left_median))
+            rights.append(float(right_median))
+            # Ties are counted separately, never folded into a win for either side: a
+            # family that embeds exactly on both graphs (penalty 1.000 everywhere) has
+            # no ranking at all, and reporting it as a clean sweep for whichever side
+            # the comparison happens to test second would invent a result.
+            if left_median < right_median:
+                left_wins += 1
+            elif right_median < left_median:
+                right_wins += 1
+            else:
+                ties += 1
+        if not lefts:
+            continue
+        decided = left_wins + right_wins
+        records.append(
+            {
+                "circuit_family": family,
+                "comparisons": len(lefts),
+                f"{left}_median_of_medians": float(np.median(lefts)),
+                f"{right}_median_of_medians": float(np.median(rights)),
+                f"{left}_cheaper": left_wins,
+                f"{right}_cheaper": right_wins,
+                "tied": ties,
+                # Unanimity is only meaningful among comparisons that had a winner.
+                "unanimous": decided > 0 and left_wins in (0, decided),
+            }
+        )
+    return pd.DataFrame.from_records(records)
+
+
 def label_invariance(frame: pd.DataFrame, metric: str = PRIMARY_METRIC) -> pd.DataFrame:
     """Per-configuration base-versus-control comparison of `metric`.
 
@@ -97,9 +233,14 @@ def label_invariance(frame: pd.DataFrame, metric: str = PRIMARY_METRIC) -> pd.Da
     )
     statistics["base_topology"] = statistics["topology"].map(base_topology)
     statistics["is_control"] = statistics["topology"].map(is_relabelled)
+    # The named control only. Sweep members are also relabellings, but they belong to
+    # the distribution analysis: pairing a base against 25 controls at once would make
+    # this a many-to-one merge and silently average the sweep into the single-control
+    # verdict.
+    statistics["is_named_control"] = statistics["topology"].isin(RELABELLED_BASES)
 
     base = statistics[~statistics["is_control"]]
-    control = statistics[statistics["is_control"]]
+    control = statistics[statistics["is_named_control"]]
     merged = base.merge(
         control,
         on=["base_topology", *COMPARISON_KEYS],
@@ -217,7 +358,8 @@ def control_run(run_dir, metric: str = PRIMARY_METRIC) -> dict:
     run_dir = Path(run_dir)
     frame = read_raw_results(run_dir)
     controls = available_controls(frame)
-    if not controls:
+    sweeps = available_sweeps(frame)
+    if not controls and not sweeps:
         raise ValueError(
             "this run has no label-permutation control: its grid must include a "
             f"relabelled topology alongside its base, e.g. {min(RELABELLED_BASES)!r}"
@@ -231,8 +373,28 @@ def control_run(run_dir, metric: str = PRIMARY_METRIC) -> dict:
         run_dir / "label_invariance_by_level.csv",
         lambda path: by_level.to_csv(path, index=False),
     )
+
+    distribution = pd.DataFrame()
+    ranking = pd.DataFrame()
+    if sweeps:
+        distribution = sweep_distribution(frame, metric=metric)
+        atomic_write(
+            run_dir / "relabelling_distribution.csv",
+            lambda path: distribution.to_csv(path, index=False),
+        )
+        bases = sorted(sweeps)
+        if len(bases) == 2:
+            ranking = ranking_robustness(frame, bases[1], bases[0], metric=metric)
+            atomic_write(
+                run_dir / "ranking_robustness.csv",
+                lambda path: ranking.to_csv(path, index=False),
+            )
+
     return {
         "controls": controls,
+        "sweeps": sweeps,
+        "distribution": distribution,
+        "ranking": ranking,
         "metric": metric,
         "configurations": len(report),
         "report": report,
@@ -248,8 +410,11 @@ def control_run(run_dir, metric: str = PRIMARY_METRIC) -> dict:
 
 __all__ = [
     "available_controls",
+    "available_sweeps",
     "classify",
     "control_run",
     "invariance_by_level",
     "label_invariance",
+    "ranking_robustness",
+    "sweep_distribution",
 ]

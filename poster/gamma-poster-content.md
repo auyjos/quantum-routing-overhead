@@ -5,7 +5,7 @@
 **José Andrés Auyón Cóbar** · Universidad del Valle de Guatemala
 WEH Quantum Science and Technology Seminar
 
-A controlled 27-qubit benchmark of complete, heavy-hex and linear connectivity under the Qiskit transpiler. **1,080 successful compilations.** Every number on this page is recomputed from the study's saved results file.
+A controlled 27-qubit benchmark of complete, heavy-hex and linear connectivity under the Qiskit transpiler. **1,080 canonical compilations**, plus **20,040** more in a label-permutation control that tests whether the measured effects are connectivity or physical-qubit numbering. Every number on this page is recomputed from the study's saved results file.
 
 ---
 
@@ -141,11 +141,13 @@ Level-to-quality and level-to-time associations are *observed* under Qiskit 2.5.
 
 ---
 
-## Optimization Level 0 Is Confounded — Stated Openly
+## Optimization Level 0 Measures Labelling, Not Connectivity
 
 At L0 Qiskit pins the initial layout to `TrivialLayout`, the identity permutation. The circuit builders index the GHZ chain and circular EfficientSU2 on `(i, i+1)` — exactly how `CouplingMap.from_line(27)` is labeled — while heavy-hex carries the FakeCairo labeling.
 
-L0 is retained as a valid, declared Qiskit preset condition and **no stored value is changed**. But that stratum partly measures index alignment rather than connectivity, and it carries the study's largest penalties. Excluding it, the pooled constrained medians fall to **2.140× on line and 2.304× on heavy-hex**.
+This was first stated as a suspicion. It is now **measured**: relabelling the same graph moves L0 results by up to **15.70×**, roughly three times the largest topology effect measured anywhere in this study.
+
+L0 is retained as a valid, declared Qiskit preset condition and **no stored value is changed**. But no L0 number carries a topology claim. Excluding that stratum, the pooled constrained medians fall to **2.140× on line and 2.304× on heavy-hex**.
 
 ---
 
@@ -185,8 +187,30 @@ Line **2.459×** · Heavy-hex **2.522×**
 **Compilation Time**
 Local wall-clock transpilation time, pooled over 3 process repeats.
 Line **4.86 ms** · Heavy-hex **5.46 ms** · Complete **6.26 ms** median; at L3 the complete-connectivity median rises to **63.84 ms**.
+---
+
+## 6 · The Label-Permutation Control
+
+![Label-permutation control](https://raw.githubusercontent.com/auyjos/quantum-routing-overhead/master/output/gamma-assets/fig11_permutation_sweep.png)
+
+**If a result is about connectivity, renumbering the physical qubits must not change it.** So the whole experiment was re-run on 24 relabelled copies of each constrained map — same edges, same degrees, same diameter, same mean path length, only the numbering differs. **17,280 additional compilations across 48 relabelled coupling maps**, identical settings throughout.
+
+Permutations derive from a SHA-256 keystream with rejection sampling, not `random.Random`, and the resulting set is pinned by digest in the test suite — so the control reproduces bit-for-bit on any platform and any Python build.
+
+**What survives.** At levels 1 and 3 the across-labelling spread collapses to **1.06–1.23×**, and the topology ranking that matters holds unanimously: QFT is cheaper on the line in **24 of 24** relabellings, circular EfficientSU2 cheaper on heavy-hex in **24 of 24**.
+
+**What does not.** At level 0 this study's labelling is more favourable than *every* relabelling tested, on both maps — relabelling medians of 10.57× on line and 6.12× on heavy-hex against the identity's much lower values.
 
 ---
+
+## The Mechanism, and One Retracted Claim
+
+**Why label sensitivity appears exactly where it does.** Instrumenting `VF2Layout_stop_reason` over 960 compilations resolves it with no exceptions in either direction: where VF2Layout finds an exact embedding the result is label-invariant, **28 of 28**; every systematic shift falls where VF2 fails and stochastic SabreLayout chooses the layout instead, **15 of 15**.
+
+**And one claim did not survive the control.** Under this study's labelling, GHZ star looked cheap on the line at level 3 — **1.87×**. Under relabelling the median is **3.99×** (range 2.00–4.84×), and the star is cheaper on *heavy-hex* in **22 of 24** relabellings. That number is now reported as an artifact of labelling, not as a property of connectivity.
+
+Reporting a result the control overturned is the point of running one.
+
 
 ## What We Found
 
@@ -202,6 +226,12 @@ Level 3 roughly halves the penalty against level 0 — **3.904× → 1.991×** o
 **04 — Routing variability**
 Stochastic routing matters at the hard end. Five seeds on QFT / heavy-hex / n=20 / L0 span **5.419× to 7.527×**, while 43% of all constrained configurations show no seed spread at all.
 
+**05 — Labelling is a confound, and it is measurable**
+Relabelling the same graph moves level-0 results by up to **15.70×**; this study's labelling is more favourable than every relabelling tested. At levels 1 and 3 the spread falls to **1.06–1.23×** and the QFT / EfficientSU2 ranking holds in **24 of 24**.
+
+**06 — And one claim did not survive**
+GHZ star looked cheap on the line under this study's labelling — **1.87×** at level 3, against a relabelling median of **3.99×**. Under relabelling the star is cheaper on heavy-hex in **22 of 24**. That number is reported as labelling, not connectivity.
+
 ---
 
 ## Methodological Integrity
@@ -209,6 +239,8 @@ Stochastic routing matters at the hard end. Five seeds on QFT / heavy-hex / n=20
 **Controlled topology benchmark.** The primary experiment isolates connectivity by keeping physical-qubit count, gate basis, logical circuit, optimization level and transpiler seed consistent across topology comparisons.
 
 **This study evaluates compiler output under modeled connectivity constraints. It does not measure physical QPU fidelity and does not demonstrate quantum advantage.**
+
+**Level 0 measures labelling, not connectivity.** Relabelling the same graph moves it by up to 15.70× — about three times the largest topology effect measured anywhere here. Where an exact embedding exists the result is label-invariant, 28 of 28; every systematic shift falls where `VF2Layout` fails, 15 of 15.
 
 The interpretation throughout is *interaction-to-coupling compatibility under a chosen layout*. Routing is required when the current placement does not map an interaction onto an allowed edge; a different layout may remove an apparent mismatch. Complete connectivity remains an ideal denominator, not a claim about any real fully connected 27-qubit processor.
 
@@ -220,7 +252,8 @@ The interpretation throughout is *interaction-to-coupling compatibility under a 
 - Heavy-hex connectivity derived from a hardware-representative coupling graph, symmetrized and undirected
 - Results depend on the tested circuit families, sizes, and the optimization set {0, 1, 3}
 - Compilation runtime reflects the test environment; it is machine- and process-specific and will not reproduce elsewhere
-- Five transpiler seeds characterize, but do not exhaust, stochastic variability
+- One graph per topology class — heavy-hex results are Cairo's specific 27-node graph
+- Five transpiler seeds and 24 relabellings characterize, but do not exhaust, either space
 - Magnitudes, routing heuristics, topology rankings and optimization-level effects could differ under another router or Qiskit release
 
 ---
@@ -232,6 +265,8 @@ The interpretation throughout is *interaction-to-coupling compatibility under a 
 **github.com/auyjos/quantum-routing-overhead**
 
 Python 3.12.13 · Qiskit 2.5.1 · fixed transpiler seeds 11, 22, 33, 44, 55 · saved raw and summary results · locked dependencies · reproducible experiment configuration.
+
+Recompiling all 1,080 canonical points reproduced the stored metrics **exactly, 1,080 of 1,080**. Label-permutation conditions derive from a SHA-256 keystream, pinned by digest in the test suite.
 
 ```
 python -m routing_overhead.cli run --config configs/core.yaml --run-id fresh-core-canonical

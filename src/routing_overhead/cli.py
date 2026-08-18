@@ -167,7 +167,11 @@ def _control(args) -> int:
         return EXIT_ERROR
 
     print(f"label-permutation control on {result['metric']}")
-    print(f"  controls: {', '.join(result['controls'])}")
+    if result["controls"]:
+        print(f"  named controls: {', '.join(result['controls'])}")
+    if result.get("sweeps"):
+        members = ", ".join(f"{base} x{n}" for base, n in result["sweeps"].items())
+        print(f"  relabelling sweeps: {members}")
     print(f"  configurations compared: {result['configurations']}")
     for row in result["by_level"].itertuples(index=False):
         print(
@@ -190,6 +194,32 @@ def _control(args) -> int:
                 f"    {row.base_topology} {row.circuit_family} n={row.logical_qubits} "
                 f"L{row.optimization_level}: {row.base_median:.3f}x -> "
                 f"{row.relabelled_median:.3f}x ({row.relative_shift:.3f}x)"
+            )
+    distribution = result.get("distribution")
+    if distribution is not None and len(distribution):
+        print("  relabelling distribution (pooled median penalty per labelling):")
+        for row in distribution.itertuples(index=False):
+            print(
+                f"    {row.base_topology} level={row.optimization_level}: "
+                f"identity {row.identity_median:.3f}x ranks {row.identity_rank}/"
+                f"{row.sweep_members} (sweep {row.sweep_min:.3f}-{row.sweep_max:.3f}x, "
+                f"median {row.sweep_median:.3f}x, spread {row.spread_ratio:.3f}x)"
+            )
+    ranking = result.get("ranking")
+    if ranking is not None and len(ranking):
+        print("  ranking robustness across relabellings (level 0 excluded):")
+        names = [c[: -len("_cheaper")] for c in ranking.columns if c.endswith("_cheaper")]
+        for row in ranking.itertuples(index=False):
+            left, right = names
+            parts = [
+                f"{left} {getattr(row, left + '_cheaper')}",
+                f"{right} {getattr(row, right + '_cheaper')}",
+            ]
+            if row.tied:
+                parts.append(f"tied {row.tied}")
+            print(
+                f"    {row.circuit_family}: " + ", ".join(parts) + f" of {row.comparisons}"
+                + ("  (unanimous)" if row.unanimous else "")
             )
     print(f"run directory: {run_dir}")
     return EXIT_OK

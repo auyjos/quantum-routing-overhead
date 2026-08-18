@@ -1,0 +1,5 @@
+circuit_family,comparisons,line_27_median_of_medians,cairo_heavy_hex_27_median_of_medians,line_27_cheaper,cairo_heavy_hex_27_cheaper,tied,unanimous
+efficient_su2,24,3.427083333333333,2.125,0,24,0,True
+ghz_chain,24,1.0,1.0,0,0,24,False
+ghz_star,24,4.609170653907496,2.9547292143401984,2,22,0,False
+qft,24,2.3193486590038317,2.8404105602381464,24,0,0,True

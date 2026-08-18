@@ -90,18 +90,22 @@ the GHZ chain and circular Efficient SU(2) on `(i, i+1)`, exactly how
 n=24, 23 of 23 chain edges are natively satisfied on the line against 9 of 23 on Cairo.
 A control re-ran each constrained map against relabelled copies of the same graph —
 identical edges, degrees, diameter and mean path, only the physical-qubit numbering
-permuted. Across 24 uniformly random relabellings per map, the identity labelling used in
-this study is the single most favourable labelling tested at L0 on both maps: random
-relabellings give pooled L0 medians of `11.3x` on the line (identity: `3.904x`) and
-`6.1x` on Cairo (identity: `4.282x`), with GHZ chain on a relabelled line reaching
-`15.7x` where identity reports `1.000x`. L0 is retained as a valid, declared Qiskit
-preset condition and no stored value changes, but that stratum measures labelling, not
-connectivity, and no L0 number in this study carries a topology claim. Excluding it, the
-pooled constrained medians are `2.140x` on line and `2.304x` on Cairo, and the same
-control shows levels 1 and 3 are close to label-invariant there: the across-relabelling
-spread of pooled medians is `1.04x-1.20x`, with the identity labelling inside the
-distribution. Optimization level 2 was deliberately outside the pre-registered core scope
-from the start, so all comparisons are made within the tested set `{0, 1, 3}`.
+permuted. Across 24 relabellings per map, the identity labelling used in this study is
+more favourable at L0 than **every** relabelling tested, on both maps: relabellings give
+pooled L0 medians of `10.570x` on the line (range `8.611x-13.540x`, identity `3.904x`)
+and `6.117x` on Cairo (range `5.369x-7.062x`, identity `4.282x`), with GHZ chain on a
+relabelled line reaching `15.7x` where identity reports `1.000x`. L0 is retained as a
+valid, declared Qiskit preset condition and no stored value changes, but that stratum
+measures labelling, not connectivity, and no L0 number in this study carries a topology
+claim. Excluding it, the pooled constrained medians are `2.140x` on line and `2.304x` on
+Cairo, and the same control shows levels 1 and 3 are far less labelling-dependent: the
+across-relabelling spread of pooled medians falls to `1.057x-1.229x`. The identity
+labelling is not uniformly favourable there — it is the cheapest tested on the line
+(rank 2 of 24 at L1, 0 of 24 at L3) and among the most expensive on Cairo (rank 20 of 24
+at L1, 23 of 24 at L3) — so the residual labelling effect at those levels acts in
+opposite directions on the two maps and does not manufacture the reported ordering.
+Optimization level 2 was deliberately outside the pre-registered core scope from the
+start, so all comparisons are made within the tested set `{0, 1, 3}`.
 
 **The mechanism is the layout pass.** Instrumenting `VF2Layout_stop_reason` over levels 1
 and 3 (96 configurations, base and relabelled): wherever an exact subgraph embedding is
@@ -117,22 +121,30 @@ producing a `1.000x` penalty. GHZ star requires one logical qubit to interact wi
 other qubit, conflicting with maximum degree 2 on the line and 3 on Cairo. Its roughly
 `3.3x` observed median penalty is consistent with that interaction-shape difference while
 holding the logical task and qubit count fixed. **One star number is labelling-dependent
-and must be quoted as such:** on the line at levels 1 and 3, the identity labelling
-coincides with the best case of the relabelling distribution (identity `2.10x` pooled
-against a random-relabelling median of `4.37x`, range `2.10x-5.09x`), and under typical
-relabellings the star is cheaper on Cairo in 19 of 24 cases. The star's low line numbers
+and must be quoted as such:** on the line at level 3, the identity labelling gives
+`1.87x` against a relabelling median of `3.99x` (range `2.00x-4.84x`), and under
+relabelling the star is cheaper on Cairo in 22 of 24 cases. The star's low line numbers
 are a property of this study's labelling, not of line connectivity.
 
 Circuit families reverse the topology ordering, the reversal survives without the L0
 stratum, and the label-permutation control shows it is label-robust. QFT median
 two-qubit-depth penalty is `2.691x` on line and `3.192x` on Cairo, whereas circular
-Efficient SU(2) is `3.562x` on line and `2.599x` on Cairo; taken level by level, QFT
+Efficient SU(2) is `3.563x` on line and `2.599x` on Cairo; taken level by level, QFT
 stays cheaper on line (`2.819x` L1, `2.155x` L3, against `3.108x` and `2.667x` on Cairo)
 and Efficient SU(2) stays cheaper on Cairo (`2.250x` L1, `2.125x` L3, against `3.490x`
-and `3.344x` on line). Under the control, QFT is cheaper on the line in 24 of 24 random
-relabellings and Efficient SU(2) is cheaper on Cairo in 24 of 24. The defensible
-conclusion is not that one sparse topology wins, but that hardware connectivity must be
-evaluated against the workload's interaction graph.
+and `3.344x` on line). Under the control, comparing the two maps under the *same*
+relabelling index so the pair differs only in connectivity, QFT is cheaper on the line in
+24 of 24 relabellings and Efficient SU(2) is cheaper on Cairo in 24 of 24; both are
+unanimous. GHZ chain is tied at `1.000x` in 24 of 24 and therefore carries no ranking at
+all. The defensible conclusion is not that one sparse topology wins, but that hardware
+connectivity must be evaluated against the workload's interaction graph.
+
+**The Efficient SU(2) result is not an artifact of its bound parameters.** Every angle is
+fixed at `0.5`, and levels 1 and 3 resynthesise two-qubit blocks through
+`ConsolidateBlocks` and `Split2QUnitaries`, so a parameter-dependent result would make
+these one-instance findings. Recompiling at six angles including `pi/4` moved no routing
+metric at all: worst deviation `0.000000` across both constrained maps, n=12 and n=24,
+levels 1 and 3, all five seeds.
 
 Overhead generally grows as more of the device is occupied. Pooling families and levels, the
 line median rises from `1.900x` at 4 logical qubits to `3.367x` at 24; Cairo rises from
@@ -211,15 +223,26 @@ with lower routing penalties and higher local compilation cost. [Figures 2, 4, a
 
 **Timing repeats:** `stage3-timing-r2-lhc-a2899b8e`, `stage3-timing-r3-hcl-a2899b8e`
 
-**Label-permutation control runs.** The single-derangement control
-(`configs/control-label-permutation.yaml`, 1,800 compilations), the 24-relabelling sweep
-(18,720 compilations) and the VF2/Sabre mechanism attribution (960 instrumented
-compilations) were collected under Qiskit 2.5.2 on Linux, not the canonical 2.5.1
-environment. Identity-labelled results reproduced the canonical medians to within
-0.0005x everywhere checked, but the control's numbers are quoted from its own runs and
-should be re-collected alongside any fresh canonical set. Its stored permutations are
-literals in `routing_overhead.topologies.PERMUTATIONS`; the 24 sweep permutations derive
-from `random.Random(20260818)` in a single documented stream.
+**Label-permutation control runs.** The relabelling sweep
+(`configs/control-relabelling-sweep.yaml`, 19,080 compilations covering the identity
+labelling, the named derangement and 24 relabellings per constrained map) and the
+VF2/Sabre mechanism attribution (960 instrumented compilations) were collected under
+**Qiskit 2.5.1**, the same version as the canonical run, through the same journalled CLI
+pipeline with per-row circuit hashes, topology hashes and experiment identities.
+
+**Every experimental condition is a stored literal or a pure function of its own name.**
+The named control's permutations are literals in
+`routing_overhead.topologies.PERMUTATIONS`. The 24 sweep permutations per map are derived
+by Fisher-Yates over a **SHA-256 keystream** keyed on the topology name and sweep index,
+with rejection sampling for uniformity — no process RNG, no dependence on call order,
+dict ordering or Python version. `sweep_permutations_digest()` reduces all 48 to one
+value, pinned in `tests/test_determinism.py`, and the derivation is re-checked under
+three different `PYTHONHASHSEED` values in separate interpreters.
+
+**Determinism is verified, not assumed.** Under the pinned environment, recompiling every
+one of the 1,080 canonical grid points reproduced the stored `output_depth`,
+`output_two_qubit_depth` and `output_two_qubit_count` exactly — 1,080 of 1,080, zero
+mismatches — and repeated compilation of the same configuration is bit-identical.
 
 **Recorded commit:** `a2899b8ef46b41fc7829f3d9e8b106b069f76a39`
 

@@ -33,10 +33,21 @@ BASE_TOPOLOGIES = ("complete_27", "line_27", "cairo_heavy_hex_27")
 # and can be compared across topologies without that confound.
 RELABELLED_SUFFIX = "_relabelled"
 
+# The named single control: a stored derangement chosen so that no identity-aligned
+# `(i, i+1)` pair survives as an edge, i.e. the strongest possible removal of the
+# confound for a chain-shaped circuit.
 RELABELLED_BASES = {
     "line_27" + RELABELLED_SUFFIX: "line_27",
     "cairo_heavy_hex_27" + RELABELLED_SUFFIX: "cairo_heavy_hex_27",
 }
+
+# The sweep: a family of relabellings per base, so the labelling effect is reported as a
+# distribution rather than a single anecdote. One permutation answers "does labelling
+# matter here?"; a family answers "is this study's labelling typical?".
+RELABELLING_SWEEP_SIZE = 24
+SWEEP_PREFIX = "_perm"
+
+SWEEP_BASES = tuple(RELABELLED_BASES.values())
 
 # Permutations are stored as literals rather than regenerated from a seeded shuffle:
 # the exact relabelling is part of the experimental record, and it must not drift with
@@ -57,17 +68,54 @@ PERMUTATIONS = {
     ),
 }
 
-TOPOLOGIES = (*BASE_TOPOLOGIES, *RELABELLED_BASES)
+def sweep_topology(base: str, index: int) -> str:
+    """Canonical name of the `index`-th sweep relabelling of `base`."""
+    if base not in SWEEP_BASES:
+        raise ValueError(f"no relabelling sweep defined for topology: {base!r}")
+    if not 0 <= index < RELABELLING_SWEEP_SIZE:
+        raise ValueError(
+            f"sweep index must be in 0..{RELABELLING_SWEEP_SIZE - 1}, got {index}"
+        )
+    return f"{base}{SWEEP_PREFIX}{index:02d}"
+
+
+SWEEP_TOPOLOGIES = tuple(
+    sweep_topology(base, index)
+    for base in SWEEP_BASES
+    for index in range(RELABELLING_SWEEP_SIZE)
+)
+
+SWEEP_BASE_OF = {
+    sweep_topology(base, index): base
+    for base in SWEEP_BASES
+    for index in range(RELABELLING_SWEEP_SIZE)
+}
+
+TOPOLOGIES = (*BASE_TOPOLOGIES, *RELABELLED_BASES, *SWEEP_TOPOLOGIES)
 
 
 def base_topology(name: str) -> str:
     """The graph a topology is built from: itself, or the base a control relabels."""
-    return RELABELLED_BASES.get(name, name)
+    if name in RELABELLED_BASES:
+        return RELABELLED_BASES[name]
+    return SWEEP_BASE_OF.get(name, name)
 
 
 def is_relabelled(name: str) -> bool:
-    """True for the label-permutation controls."""
-    return name in RELABELLED_BASES
+    """True for any label-permutation control: the named one or a sweep member."""
+    return name in RELABELLED_BASES or name in SWEEP_BASE_OF
+
+
+def is_sweep(name: str) -> bool:
+    """True only for members of the relabelling sweep."""
+    return name in SWEEP_BASE_OF
+
+
+def sweep_index(name: str) -> int | None:
+    """Position of `name` within its base's sweep, or None if it is not a sweep member."""
+    if name not in SWEEP_BASE_OF:
+        return None
+    return int(name.rsplit(SWEEP_PREFIX, 1)[1])
 
 
 def build_coupling_map(name: str) -> CouplingMap:
@@ -76,7 +124,13 @@ def build_coupling_map(name: str) -> CouplingMap:
     A new object is built on every call so runs can never mutate a shared map.
     """
     if name not in TOPOLOGIES:
-        raise ValueError(f"unknown topology: {name!r}; expected one of {TOPOLOGIES}")
+        raise ValueError(
+            f"unknown topology: {name!r}; expected one of {BASE_TOPOLOGIES}, "
+            f"{tuple(RELABELLED_BASES)}, or a relabelling-sweep member"
+        )
+    if name in SWEEP_BASE_OF:
+        base = SWEEP_BASE_OF[name]
+        return _symmetrized(apply_permutation(base, sweep_permutation(base, sweep_index(name))))
     if name in RELABELLED_BASES:
         base = RELABELLED_BASES[name]
         return _symmetrized(relabelled_edges(base))
@@ -91,9 +145,97 @@ def relabelled_edges(base: str) -> tuple[tuple[int, int], ...]:
     """Undirected edges of `base` with its stored physical-qubit permutation applied."""
     if base not in PERMUTATIONS:
         raise ValueError(f"no stored permutation for topology: {base!r}")
-    permutation = PERMUTATIONS[base]
+    return apply_permutation(base, PERMUTATIONS[base])
+
+
+def apply_permutation(base: str, permutation) -> tuple[tuple[int, int], ...]:
+    """Undirected edges of `base` relabelled by `permutation`.
+
+    The graph is unchanged: this renames nodes, it does not add or remove edges.
+    """
     edges = undirected_edges(build_coupling_map(base))
-    return tuple(sorted({tuple(sorted((permutation[a], permutation[b]))) for a, b in edges}))
+    relabelled = tuple(
+        sorted({tuple(sorted((permutation[a], permutation[b]))) for a, b in edges})
+    )
+    if len(relabelled) != len(edges):
+        raise ValueError(
+            f"relabelling {base!r} changed the edge count "
+            f"({len(edges)} -> {len(relabelled)}); the permutation is not a bijection"
+        )
+    return relabelled
+
+
+def _keystream(label: str):
+    """Endless deterministic byte stream derived from `label` via SHA-256.
+
+    Python's `random` module is deliberately not used. Its Mersenne Twister output is
+    stable in CPython today but is an implementation detail, not a specification, so a
+    study that derived its experimental conditions from it would be reproducible only
+    by accident. SHA-256 is specified, so these permutations are identical on every
+    Python version, platform and interpreter, forever.
+    """
+    counter = 0
+    while True:
+        block = hashlib.sha256(f"{label}|{counter}".encode()).digest()
+        yield from block
+        counter += 1
+
+
+def _uniform_below(stream, bound: int) -> int:
+    """Uniform integer in [0, bound) from a byte stream, by rejection sampling.
+
+    Rejection rather than modulo: a modulo fold would bias the low indices, and the
+    sweep is described as drawing uniformly from the relabellings, so the derivation
+    has to actually be uniform rather than nearly so.
+    """
+    if bound <= 1:
+        return 0
+    span = 1
+    width = 0
+    while span < bound:
+        span <<= 8
+        width += 1
+    limit = span - (span % bound)
+    while True:
+        value = int.from_bytes(bytes(next(stream) for _ in range(width)), "big")
+        if value < limit:
+            return value % bound
+
+
+def sweep_permutation(base: str, index: int) -> tuple[int, ...]:
+    """The `index`-th sweep permutation for `base`, derived deterministically.
+
+    Fisher-Yates driven by a SHA-256 keystream keyed on the topology name and the sweep
+    index, so every permutation is a pure function of its own identity — reproducible
+    without shipping run data, and independent of iteration order elsewhere.
+    """
+    if base not in SWEEP_BASES:
+        raise ValueError(f"no relabelling sweep defined for topology: {base!r}")
+    if not 0 <= index < RELABELLING_SWEEP_SIZE:
+        raise ValueError(
+            f"sweep index must be in 0..{RELABELLING_SWEEP_SIZE - 1}, got {index}"
+        )
+    stream = _keystream(f"routing-overhead|relabelling-sweep|{base}|{index:02d}")
+    permutation = list(range(PHYSICAL_QUBITS))
+    for position in range(PHYSICAL_QUBITS - 1, 0, -1):
+        swap = _uniform_below(stream, position + 1)
+        permutation[position], permutation[swap] = permutation[swap], permutation[position]
+    return tuple(permutation)
+
+
+def sweep_permutations_digest() -> str:
+    """SHA-256 over every sweep permutation, in canonical order.
+
+    A single value a test can pin. If any part of the derivation changes — the hash
+    input, the shuffle, the rejection bound — this digest moves and the regression
+    test fails, rather than the study silently running on different conditions.
+    """
+    payload = ";".join(
+        f"{base}:{index:02d}:" + ",".join(str(q) for q in sweep_permutation(base, index))
+        for base in SWEEP_BASES
+        for index in range(RELABELLING_SWEEP_SIZE)
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def identity_aligned_edges(name: str) -> int:

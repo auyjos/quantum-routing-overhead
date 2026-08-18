@@ -1,0 +1,73 @@
+# Relabelling sweep: the labelling effect as a distribution, not an anecdote.
+#
+# Every constrained map appears three ways — as itself, as the named single control
+# (`_relabelled`, the stored derangement that removes every identity-aligned edge), and
+# as 24 sweep members (`_perm00` .. `_perm23`, deterministically derived from a SHA-256
+# keystream). All 26 variants of a base are the SAME GRAPH: identical edge count, degree
+# sequence, diameter, mean shortest path and cycle spectrum. Only the physical-qubit
+# numbering differs.
+#
+# complete_27 is present because it is the penalty denominator, not because it is under
+# test: a fully connected map has no labelling to break.
+#
+# 53 topologies x 4 families x 6 sizes x 3 levels x 5 seeds = 19,080 compilations.
+physical_qubits: 27
+logical_qubits: [4, 8, 12, 16, 20, 24]
+circuit_families: [qft, ghz_chain, ghz_star, efficient_su2]
+topologies:
+  - complete_27
+  - line_27
+  - line_27_relabelled
+  - line_27_perm00
+  - line_27_perm01
+  - line_27_perm02
+  - line_27_perm03
+  - line_27_perm04
+  - line_27_perm05
+  - line_27_perm06
+  - line_27_perm07
+  - line_27_perm08
+  - line_27_perm09
+  - line_27_perm10
+  - line_27_perm11
+  - line_27_perm12
+  - line_27_perm13
+  - line_27_perm14
+  - line_27_perm15
+  - line_27_perm16
+  - line_27_perm17
+  - line_27_perm18
+  - line_27_perm19
+  - line_27_perm20
+  - line_27_perm21
+  - line_27_perm22
+  - line_27_perm23
+  - cairo_heavy_hex_27
+  - cairo_heavy_hex_27_relabelled
+  - cairo_heavy_hex_27_perm00
+  - cairo_heavy_hex_27_perm01
+  - cairo_heavy_hex_27_perm02
+  - cairo_heavy_hex_27_perm03
+  - cairo_heavy_hex_27_perm04
+  - cairo_heavy_hex_27_perm05
+  - cairo_heavy_hex_27_perm06
+  - cairo_heavy_hex_27_perm07
+  - cairo_heavy_hex_27_perm08
+  - cairo_heavy_hex_27_perm09
+  - cairo_heavy_hex_27_perm10
+  - cairo_heavy_hex_27_perm11
+  - cairo_heavy_hex_27_perm12
+  - cairo_heavy_hex_27_perm13
+  - cairo_heavy_hex_27_perm14
+  - cairo_heavy_hex_27_perm15
+  - cairo_heavy_hex_27_perm16
+  - cairo_heavy_hex_27_perm17
+  - cairo_heavy_hex_27_perm18
+  - cairo_heavy_hex_27_perm19
+  - cairo_heavy_hex_27_perm20
+  - cairo_heavy_hex_27_perm21
+  - cairo_heavy_hex_27_perm22
+  - cairo_heavy_hex_27_perm23
+optimization_levels: [0, 1, 3]
+transpiler_seeds: [11, 22, 33, 44, 55]
+basis_gates: [rz, sx, x, cx]

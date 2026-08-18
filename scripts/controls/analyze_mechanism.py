@@ -262,9 +262,9 @@ sanity["identity_labelled_penalty_median_summary"] = {
 # ---------------------------------------------------------------------------
 summary = {
     "grid": {
-        "attribution_rows": int(len(attribution)),
-        "label_invariance_L1_L3_rows": int(len(label_inv)),
-        "joined_rows": int(len(joined)),
+        "attribution_rows": len(attribution),
+        "label_invariance_L1_L3_rows": len(label_inv),
+        "joined_rows": len(joined),
     },
     "classification_counts": class_counts,
     "contingency_full_classification_vs_label_invariant": {

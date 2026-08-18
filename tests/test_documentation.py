@@ -57,17 +57,19 @@ def test_level_zero_is_not_softened_back_to_partly_confounded():
     measuring index alignment, or letting an L0 number carry a topology claim, would be
     a regression. Applies to the poster, where the control is reported.
     """
-    document = POSTER.read_text(encoding="utf-8")
-    assert "label-permutation control" in document
-    assert "partly measures index" not in document
-    assert "measures labelling, not" in document
+    for path in DOCUMENTS:
+        document = path.read_text(encoding="utf-8")
+        assert "label-permutation control" in document, path.name
+        assert "partly measures index" not in document, path.name
+        assert "partly\nmeasures physical-index" not in document, path.name
+        assert "measures labelling, not" in document, path.name
 
 
 def test_the_star_line_number_is_flagged_as_labelling_dependent():
-    """Identity coincides with the best case of the star's relabelling distribution."""
+    """Identity sits far below the star's relabelling distribution on the line."""
     document = POSTER.read_text(encoding="utf-8")
     assert "labelling-dependent" in document
-    assert "19 of 24" in document
+    assert "22 of 24" in document
 
 
 def test_the_reversal_is_reported_with_its_label_robustness():
@@ -76,10 +78,29 @@ def test_the_reversal_is_reported_with_its_label_robustness():
     assert "24 of 24" in document
 
 
-def test_the_control_runs_declare_their_qiskit_version():
-    """Control numbers come from 2.5.2 runs, not the canonical 2.5.1 environment."""
+def test_the_controls_run_on_the_canonical_qiskit_version():
+    """The control was re-collected on 2.5.1 to remove the cross-version caveat.
+
+    An earlier draft carried the controls on 2.5.2 and said so. Re-running them on the
+    canonical version removed that qualifier; reintroducing a second version without
+    re-running would silently restore an untested comparison.
+    """
     document = POSTER.read_text(encoding="utf-8")
-    assert "2.5.2" in document
+    assert "Qiskit 2.5.1" in document
+    assert "2.5.2" not in document
+
+
+def test_the_permutation_derivation_is_documented_as_reproducible():
+    """Conditions derived from a process RNG are reproducible only by accident."""
+    document = POSTER.read_text(encoding="utf-8")
+    assert "SHA-256" in document
+    assert "random.Random(" not in document
+
+
+def test_the_ranking_claim_reports_ties_rather_than_inventing_a_winner():
+    """GHZ chain embeds on both maps; it has no ranking to report."""
+    document = POSTER.read_text(encoding="utf-8")
+    assert "tied at `1.000x` in 24 of 24" in document
 
 
 def test_documented_commands_run_from_a_fresh_clone(document):

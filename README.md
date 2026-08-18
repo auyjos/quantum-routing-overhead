@@ -24,17 +24,20 @@ logical sizes, three topologies, three optimization levels, and five fixed seeds
 | QFT median 2Q-depth penalty | 2.691x | 3.192x |
 | GHZ chain median 2Q-depth penalty | 1.000x | 1.000x |
 | GHZ star median 2Q-depth penalty | 3.299x | 3.261x |
-| Efficient SU(2) median 2Q-depth penalty | 3.562x | 2.599x |
+| Efficient SU(2) median 2Q-depth penalty | 3.563x | 2.599x |
 
-**Read the level-0 stratum with care.** Qiskit's optimization level 0 pins the initial
-layout to `TrivialLayout`, the identity permutation. The circuit builders index a GHZ
-chain and a circular Efficient SU(2) on `(i, i+1)`, which is exactly how
+**Level 0 measures labelling, not connectivity.** Qiskit's optimization level 0 pins the
+initial layout to `TrivialLayout`, the identity permutation. The circuit builders index a
+GHZ chain and a circular Efficient SU(2) on `(i, i+1)`, which is exactly how
 `CouplingMap.from_line(27)` is labelled, so the line map is pre-aligned with the circuits
-at level 0 while Cairo carries the FakeCairo labelling. Level 0 remains a valid, declared
-Qiskit condition and no stored value is affected, but that third of the grid partly
-measures physical-index alignment rather than connectivity alone, and it carries the
-study's largest penalties. Excluding it, the pooled constrained medians fall to `2.140x`
-on the line and `2.304x` on Cairo. Optimization level 2 was left outside the
+at level 0 while Cairo carries the FakeCairo labelling. The label-permutation control
+below measured that effect rather than leaving it as a caveat: relabelling the same graph
+moves the pooled level-0 median from `3.904x` to a relabelling median of `10.570x` on the
+line and from `4.282x` to `6.117x` on Cairo, and the identity labelling is more
+favourable than every relabelling tested on both maps. Level 0 remains a valid, declared
+Qiskit condition and no stored value is affected, but **no level-0 number here carries a
+topology claim**. Excluding it, the pooled constrained medians fall to `2.140x` on the
+line and `2.304x` on Cairo. Optimization level 2 was left outside the
 pre-registered core scope from the start (see the implementation plan's optional list),
 so every comparison here is made within the tested set `{0, 1, 3}`.
 
@@ -127,18 +130,28 @@ circular Efficient SU(2) builders index their entanglers on `(i, i+1)` — exact
 `CouplingMap.from_line(27)` numbers its nodes. A penalty that depends on that coincidence
 is measuring labelling, not connectivity.
 
-`configs/control-label-permutation.yaml` pairs each constrained map with a relabelled
-copy of the **same graph**: identical edge count, degree sequence, diameter and mean
-shortest path, with the physical-qubit numbering permuted so no `(i, i+1)` pair survives
-as an edge. `control` then compares the two and writes `label_invariance.csv` and
-`label_invariance_by_level.csv`.
+Two configurations provide the control. `configs/control-label-permutation.yaml` pairs
+each constrained map with one named relabelling of the **same graph** — identical edge
+count, degree sequence, diameter and mean shortest path, with the numbering permuted so
+that no `(i, i+1)` pair survives as an edge. `configs/control-relabelling-sweep.yaml`
+adds 24 further relabellings per map, so the labelling effect is reported as a
+distribution rather than a single anecdote.
 
 ```powershell
-python -m routing_overhead.cli run --config configs/control-label-permutation.yaml `
-  --run-id control-label-permutation
-python -m routing_overhead.cli aggregate --run artifacts/runs/control-label-permutation
-python -m routing_overhead.cli control --run artifacts/runs/control-label-permutation
+python -m routing_overhead.cli run --config configs/control-relabelling-sweep.yaml `
+  --run-id relabelling-sweep
+python -m routing_overhead.cli aggregate --run artifacts/runs/relabelling-sweep
+python -m routing_overhead.cli control --run artifacts/runs/relabelling-sweep
 ```
+
+`control` writes `label_invariance.csv`, `label_invariance_by_level.csv`,
+`relabelling_distribution.csv` and `ranking_robustness.csv`.
+
+The sweep permutations are **not** drawn from a process RNG. Each is Fisher-Yates over a
+SHA-256 keystream keyed on the topology name and sweep index, with rejection sampling for
+uniformity, so every relabelling is a pure function of its own identity and reproduces on
+any Python version or platform. `sweep_permutations_digest()` reduces the whole family to
+one value that `tests/test_determinism.py` pins.
 
 A shift is only reported as **systematic** when the base and control seed ranges are
 disjoint, so it cannot be produced by stochastic routing scatter. Each level of each base
