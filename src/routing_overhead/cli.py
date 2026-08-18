@@ -1,4 +1,4 @@
-"""Command line entry point: validate-config, run, aggregate, plot."""
+"""Command line entry point: validate-config, run, aggregate, plot, control."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from pathlib import Path
 
 from routing_overhead.aggregation import aggregate_run
 from routing_overhead.config import ConfigError, load_config
+from routing_overhead.controls import control_run
 from routing_overhead.experiments import default_run_id, prepare_run_directory, run_grid
 from routing_overhead.export import export_run
 from routing_overhead.plotting import plot_run
@@ -49,6 +50,17 @@ def build_parser() -> argparse.ArgumentParser:
         "export", help="write a run's summary, raw results, and topologies as JSON"
     )
     export.add_argument("--run", required=True, help="path to a run directory")
+
+    control = subparsers.add_parser(
+        "control",
+        help="compare each topology against a relabelled copy of the same graph",
+    )
+    control.add_argument("--run", required=True, help="path to a run directory")
+    control.add_argument(
+        "--metric",
+        default="two_qubit_depth_penalty",
+        help="penalty column to compare (default: two_qubit_depth_penalty)",
+    )
     return parser
 
 
@@ -66,6 +78,8 @@ def main(argv: list[str] | None = None) -> int:
         return _aggregate(args)
     if args.command == "plot":
         return _plot(args)
+    if args.command == "control":
+        return _control(args)
     return _export(args)
 
 
@@ -137,6 +151,46 @@ def _export(args) -> int:
         print(str(error), file=sys.stderr)
         return EXIT_ERROR
     print(f"wrote {result['path']}")
+    print(f"run directory: {run_dir}")
+    return EXIT_OK
+
+
+def _control(args) -> int:
+    run_dir = Path(args.run)
+    if not (run_dir / "raw_results.csv").is_file():
+        print(f"no raw results in {run_dir}", file=sys.stderr)
+        return EXIT_ERROR
+    try:
+        result = control_run(run_dir, metric=args.metric)
+    except (KeyError, ValueError) as error:
+        print(str(error), file=sys.stderr)
+        return EXIT_ERROR
+
+    print(f"label-permutation control on {result['metric']}")
+    print(f"  controls: {', '.join(result['controls'])}")
+    print(f"  configurations compared: {result['configurations']}")
+    for row in result["by_level"].itertuples(index=False):
+        print(
+            f"  {row.base_topology} level={row.optimization_level}: "
+            f"{row.label_invariant}/{row.configurations} unchanged, "
+            f"{row.systematic} systematic "
+            f"(geo-mean {row.geometric_mean_relative_shift:.3f}x, "
+            f"max {row.max_relative_shift:.3f}x) -> {row.verdict}"
+        )
+    if result["clean_levels"]:
+        levels = ", ".join(str(level) for level in result["clean_levels"])
+        print(f"  levels carrying no labelling bias: {levels}")
+    else:
+        print("  every level shows a labelling effect")
+    systematic = result["systematic"]
+    if len(systematic):
+        print(f"  systematic shifts ({len(systematic)}), disjoint seed ranges:")
+        for row in systematic.nlargest(8, "relative_shift").itertuples(index=False):
+            print(
+                f"    {row.base_topology} {row.circuit_family} n={row.logical_qubits} "
+                f"L{row.optimization_level}: {row.base_median:.3f}x -> "
+                f"{row.relabelled_median:.3f}x ({row.relative_shift:.3f}x)"
+            )
     print(f"run directory: {run_dir}")
     return EXIT_OK
 

@@ -120,6 +120,30 @@ Run the core grid only after the smoke benchmark passes:
 python -m routing_overhead.cli run --config configs/core.yaml
 ```
 
+## Label-permutation control
+
+Qiskit's `TrivialLayout` maps logical qubit i to physical qubit i, and the GHZ chain and
+circular Efficient SU(2) builders index their entanglers on `(i, i+1)` — exactly how
+`CouplingMap.from_line(27)` numbers its nodes. A penalty that depends on that coincidence
+is measuring labelling, not connectivity.
+
+`configs/control-label-permutation.yaml` pairs each constrained map with a relabelled
+copy of the **same graph**: identical edge count, degree sequence, diameter and mean
+shortest path, with the physical-qubit numbering permuted so no `(i, i+1)` pair survives
+as an edge. `control` then compares the two and writes `label_invariance.csv` and
+`label_invariance_by_level.csv`.
+
+```powershell
+python -m routing_overhead.cli run --config configs/control-label-permutation.yaml `
+  --run-id control-label-permutation
+python -m routing_overhead.cli aggregate --run artifacts/runs/control-label-permutation
+python -m routing_overhead.cli control --run artifacts/runs/control-label-permutation
+```
+
+A shift is only reported as **systematic** when the base and control seed ranges are
+disjoint, so it cannot be produced by stochastic routing scatter. Each level of each base
+topology is then classified `label-invariant`, `noise-only`, or `label-sensitive`.
+
 ## Poster figures
 
 `plot` draws the poster figure set as PNG (300 dpi) and SVG into `<run>/figures/`.

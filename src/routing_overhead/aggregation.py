@@ -72,8 +72,35 @@ def penalty_warnings(frame: pd.DataFrame) -> list[str]:
     return warnings
 
 
+def geometric_mean(values) -> float:
+    """Geometric mean, computed in log space; NaN unless every value is positive.
+
+    The penalties this study reports are normalized ratios, and the geometric mean is
+    the summary statistic that treats a 2x speed-up and a 2x slow-down symmetrically —
+    the convention adopted for normalized compiler benchmarks. It is reported alongside
+    the median rather than replacing it: the median stays robust to the exact-1.000
+    spikes that structural embeddings produce, while the geometric mean is the figure
+    comparable with other normalized benchmark results.
+
+    A non-positive value makes the statistic undefined rather than zero, so it is
+    reported as NaN instead of silently collapsing the whole group.
+    """
+    array = np.asarray(values, dtype=float)
+    array = array[~np.isnan(array)]
+    if array.size == 0 or np.any(array <= 0):
+        return float("nan")
+    return float(np.exp(np.mean(np.log(array))))
+
+
 def summarize(frame: pd.DataFrame) -> pd.DataFrame:
-    """Median/IQR-first summary across seeds for every configuration."""
+    """Median/IQR-first summary across seeds for every configuration.
+
+    `min` is also the best-of-seeds figure for every metric summarized here, since all
+    of them — penalties, depths, counts, compile time — are lower-is-better. Qiskit's
+    own guidance is to transpile repeatedly and keep the best output, so `min` is the
+    number that describes the transpiler as it is actually used, while `median`
+    describes the distribution a single unlucky run is drawn from.
+    """
     metrics = [metric for metric in SUMMARY_METRICS if metric in frame.columns]
     records = []
     for keys, group in frame.groupby(list(GROUP_KEYS), dropna=False, sort=True):
@@ -93,6 +120,7 @@ def summarize(frame: pd.DataFrame) -> pd.DataFrame:
                     "min": float(values.min()),
                     "max": float(values.max()),
                     "mean": float(values.mean()),
+                    "geometric_mean": geometric_mean(values.to_numpy()),
                     # Sample standard deviation is undefined at n=1; reporting 0.0 would
                     # present a configuration where every seed but one failed as having
                     # no variability at all.
@@ -112,9 +140,55 @@ def summarize(frame: pd.DataFrame) -> pd.DataFrame:
             "min",
             "max",
             "mean",
+            "geometric_mean",
             "std",
         ],
     )
+
+
+def pooled_summary(frame: pd.DataFrame, metric: str = "two_qubit_depth_penalty") -> pd.DataFrame:
+    """Per-topology pooled statistics, single-run and best-of-seeds side by side.
+
+    Two rows of evidence answer two different questions:
+
+    * `median` / `geometric_mean` / IQR pool every individual compilation, and describe
+      what one transpiler invocation with an arbitrary seed produces.
+    * `best_of_seeds_*` first takes the minimum across the seeds of each configuration,
+      then pools those minima. That is the documented way to use a stochastic router —
+      compile several times, keep the best — so it is the figure that describes the
+      overhead a practitioner would actually ship with.
+
+    The gap between the two is the value of repeated transpilation, expressed in the
+    same units as the headline penalty.
+    """
+    metric_values = _floats(frame[metric])
+    working = frame.assign(**{metric: metric_values}).dropna(subset=[metric])
+    per_configuration = (
+        working.groupby(list(GROUP_KEYS), dropna=False, sort=True)[metric].min().reset_index()
+    )
+    records = []
+    for topology, group in working.groupby("topology", dropna=False, sort=True):
+        values = group[metric].astype(float)
+        best = per_configuration.loc[
+            per_configuration["topology"] == topology, metric
+        ].astype(float)
+        records.append(
+            {
+                "topology": topology,
+                "metric": metric,
+                "count": int(values.size),
+                "median": float(values.median()),
+                "q25": float(values.quantile(0.25)),
+                "q75": float(values.quantile(0.75)),
+                "geometric_mean": geometric_mean(values.to_numpy()),
+                "min": float(values.min()),
+                "max": float(values.max()),
+                "configurations": int(best.size),
+                "best_of_seeds_median": float(best.median()) if best.size else float("nan"),
+                "best_of_seeds_geometric_mean": geometric_mean(best.to_numpy()),
+            }
+        )
+    return pd.DataFrame.from_records(records)
 
 
 def aggregate_run(run_dir) -> dict:

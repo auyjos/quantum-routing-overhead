@@ -267,6 +267,7 @@ def test_aggregate_run_fills_raw_penalties_and_writes_the_summary(tmp_path):
         "min",
         "max",
         "mean",
+        "geometric_mean",
         "std",
     }
     assert len(summary) > 0

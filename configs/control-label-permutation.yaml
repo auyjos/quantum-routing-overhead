@@ -1,0 +1,21 @@
+# Label-permutation control.
+#
+# Each constrained topology is paired with a relabelled copy of the SAME graph, so
+# connectivity is held fixed and only the physical-qubit labelling changes. Levels whose
+# penalties are unchanged under relabelling are label-invariant; levels whose penalties
+# move were measuring index alignment as well as connectivity.
+#
+# complete_27 is present because it is the penalty denominator, not because it is under
+# test: a fully connected map has no labelling to break.
+physical_qubits: 27
+logical_qubits: [4, 8, 12, 16, 20, 24]
+circuit_families: [qft, ghz_chain, ghz_star, efficient_su2]
+topologies:
+  - complete_27
+  - line_27
+  - line_27_relabelled
+  - cairo_heavy_hex_27
+  - cairo_heavy_hex_27_relabelled
+optimization_levels: [0, 1, 3]
+transpiler_seeds: [11, 22, 33, 44, 55]
+basis_gates: [rz, sx, x, cx]

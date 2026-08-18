@@ -48,6 +48,40 @@ def test_provenance_is_code_only(document):
     assert "distributed accepted artifact bundle" not in document
 
 
+def test_level_zero_is_not_softened_back_to_partly_confounded():
+    """The label-permutation control superseded the original hedge.
+
+    The control showed the identity labelling is the most favourable of all labelings
+    tested at L0 (random-relabelling pooled medians 11.3x line / 6.1x Cairo against
+    identity's 3.904x / 4.282x). After that measurement, describing L0 as only "partly"
+    measuring index alignment, or letting an L0 number carry a topology claim, would be
+    a regression. Applies to the poster, where the control is reported.
+    """
+    document = POSTER.read_text(encoding="utf-8")
+    assert "label-permutation control" in document
+    assert "partly measures index" not in document
+    assert "measures labelling, not" in document
+
+
+def test_the_star_line_number_is_flagged_as_labelling_dependent():
+    """Identity coincides with the best case of the star's relabelling distribution."""
+    document = POSTER.read_text(encoding="utf-8")
+    assert "labelling-dependent" in document
+    assert "19 of 24" in document
+
+
+def test_the_reversal_is_reported_with_its_label_robustness():
+    """QFT/Efficient SU(2) ordering held in every random relabelling tested."""
+    document = POSTER.read_text(encoding="utf-8")
+    assert "24 of 24" in document
+
+
+def test_the_control_runs_declare_their_qiskit_version():
+    """Control numbers come from 2.5.2 runs, not the canonical 2.5.1 environment."""
+    document = POSTER.read_text(encoding="utf-8")
+    assert "2.5.2" in document
+
+
 def test_documented_commands_run_from_a_fresh_clone(document):
     """A clone has no `artifacts/runs`: `.gitignore` excludes it and no bundle is published."""
     assert "--run artifacts/runs/stage3-" not in document

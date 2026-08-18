@@ -75,6 +75,8 @@ def test_metadata_reports_the_full_descriptive_record(name):
     metadata = topology_metadata(name)
     assert set(metadata) == {
         "topology",
+        "base_topology",
+        "relabelled",
         "physical_qubits",
         "directed_edges",
         "undirected_edges",
@@ -84,6 +86,7 @@ def test_metadata_reports_the_full_descriptive_record(name):
         "diameter",
         "average_shortest_path_length",
         "connected",
+        "identity_aligned_edges",
         "edge_list_hash",
     }
     assert metadata["topology"] == name

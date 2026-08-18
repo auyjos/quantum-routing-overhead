@@ -1,0 +1,20 @@
+label-permutation control on two_qubit_depth_penalty
+  controls: cairo_heavy_hex_27, line_27
+  configurations compared: 144
+  cairo_heavy_hex_27 level=0: 0/24 unchanged, 19 systematic (geo-mean 1.624x, max 7.000x) -> label-sensitive
+  cairo_heavy_hex_27 level=1: 12/24 unchanged, 3 systematic (geo-mean 0.995x, max 1.358x) -> label-sensitive
+  cairo_heavy_hex_27 level=3: 11/24 unchanged, 0 systematic (geo-mean 0.991x, max 1.175x) -> noise-only
+  line_27 level=0: 0/24 unchanged, 24 systematic (geo-mean 4.200x, max 15.696x) -> label-sensitive
+  line_27 level=1: 12/24 unchanged, 6 systematic (geo-mean 1.076x, max 1.640x) -> label-sensitive
+  line_27 level=3: 13/24 unchanged, 6 systematic (geo-mean 1.174x, max 2.722x) -> label-sensitive
+  every level shows a labelling effect
+  systematic shifts (58), disjoint seed ranges:
+    line_27 ghz_chain n=24 L0: 1.000x -> 15.696x (15.696x)
+    line_27 ghz_chain n=4 L0: 1.000x -> 15.667x (15.667x)
+    line_27 ghz_chain n=16 L0: 1.000x -> 15.600x (15.600x)
+    line_27 ghz_chain n=20 L0: 1.000x -> 15.158x (15.158x)
+    line_27 ghz_chain n=12 L0: 1.000x -> 14.273x (14.273x)
+    line_27 ghz_chain n=8 L0: 1.000x -> 13.857x (13.857x)
+    cairo_heavy_hex_27 ghz_chain n=4 L0: 1.000x -> 7.000x (7.000x)
+    line_27 ghz_star n=4 L0: 3.000x -> 11.000x (3.667x)
+run directory: artifacts/runs/control-label-permutation

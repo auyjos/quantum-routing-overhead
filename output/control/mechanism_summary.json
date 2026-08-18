@@ -1,0 +1,1953 @@
+{
+  "grid": {
+    "attribution_rows": 960,
+    "label_invariance_L1_L3_rows": 96,
+    "joined_rows": 96
+  },
+  "classification_counts": {
+    "vf2_failed": 68,
+    "vf2_solved": 21,
+    "mixed": 7
+  },
+  "contingency_full_classification_vs_label_invariant": {
+    "mixed": {
+      "label_invariant=False": 0,
+      "label_invariant=True": 7
+    },
+    "vf2_failed": {
+      "label_invariant=False": 48,
+      "label_invariant=True": 20
+    },
+    "vf2_solved": {
+      "label_invariant=False": 0,
+      "label_invariant=True": 21
+    }
+  },
+  "contingency_vf2_solved_vs_label_invariant": {
+    "vf2_solved=False": {
+      "label_invariant=False": 48,
+      "label_invariant=True": 27
+    },
+    "vf2_solved=True": {
+      "label_invariant=False": 0,
+      "label_invariant=True": 21
+    }
+  },
+  "contingency_vf2_failed_vs_systematic": {
+    "vf2_failed=False": {
+      "systematic=False": 28,
+      "systematic=True": 0
+    },
+    "vf2_failed=True": {
+      "systematic=False": 53,
+      "systematic=True": 15
+    }
+  },
+  "exceptions": {
+    "vf2_solved_but_not_label_invariant": [],
+    "label_invariant_but_not_vf2_solved": [
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 4,
+        "optimization_level": 3,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 8,
+        "optimization_level": 1,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 8,
+        "optimization_level": 3,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "classification": "mixed",
+        "n_solution_found": 5,
+        "n_no_solution_found": 0,
+        "n_trivial_sufficient": 5,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 16,
+        "optimization_level": 1,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 4,
+        "optimization_level": 3,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 4,
+        "optimization_level": 3,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 8,
+        "optimization_level": 1,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 8,
+        "optimization_level": 3,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 12,
+        "optimization_level": 1,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 12,
+        "optimization_level": 3,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 16,
+        "optimization_level": 1,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 16,
+        "optimization_level": 3,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 24,
+        "optimization_level": 3,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "classification": "mixed",
+        "n_solution_found": 5,
+        "n_no_solution_found": 0,
+        "n_trivial_sufficient": 5,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 8,
+        "optimization_level": 1,
+        "classification": "mixed",
+        "n_solution_found": 5,
+        "n_no_solution_found": 0,
+        "n_trivial_sufficient": 5,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 12,
+        "optimization_level": 1,
+        "classification": "mixed",
+        "n_solution_found": 5,
+        "n_no_solution_found": 0,
+        "n_trivial_sufficient": 5,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 16,
+        "optimization_level": 1,
+        "classification": "mixed",
+        "n_solution_found": 5,
+        "n_no_solution_found": 0,
+        "n_trivial_sufficient": 5,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 20,
+        "optimization_level": 1,
+        "classification": "mixed",
+        "n_solution_found": 5,
+        "n_no_solution_found": 0,
+        "n_trivial_sufficient": 5,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 24,
+        "optimization_level": 1,
+        "classification": "mixed",
+        "n_solution_found": 5,
+        "n_no_solution_found": 0,
+        "n_trivial_sufficient": 5,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 4,
+        "optimization_level": 3,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 8,
+        "optimization_level": 3,
+        "classification": "vf2_failed",
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false
+      }
+    ],
+    "vf2_failed_but_not_systematic": [
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 4,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 8,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 8,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 16,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.6511627906976745,
+        "absolute_shift": 0.9375
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 16,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.725,
+        "absolute_shift": 0.6875
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 24,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.175438596491228,
+        "absolute_shift": 0.4166666666666665
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 24,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.150943396226415,
+        "absolute_shift": 0.3478260869565215
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 8,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.8421052631578947,
+        "absolute_shift": 0.4285714285714288
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 8,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.8666666666666665,
+        "absolute_shift": 0.285714285714286
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 12,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.9393939393939394,
+        "absolute_shift": 0.1818181818181816
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 12,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.9032258064516128,
+        "absolute_shift": 0.2727272727272729
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 16,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 16,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.0444444444444445,
+        "absolute_shift": 0.1333333333333333
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 20,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.2537313432835822,
+        "absolute_shift": 0.8947368421052637
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 20,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.96875,
+        "absolute_shift": 0.1052631578947367
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 24,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.0389610389610389,
+        "absolute_shift": 0.1304347826086953
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 4,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 8,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.9166666666666666,
+        "absolute_shift": 0.2307692307692308
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 8,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.0172413793103448,
+        "absolute_shift": 0.0384615384615383
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 12,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.1153846153846154,
+        "absolute_shift": 0.3571428571428572
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 12,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.1282051282051282,
+        "absolute_shift": 0.3571428571428572
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 16,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.8209606986899565,
+        "absolute_shift": 0.7068965517241375
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 16,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.9277777777777778,
+        "absolute_shift": 0.2241379310344826
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 20,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.9783549783549784,
+        "absolute_shift": 0.0675675675675671
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 20,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.0676328502415455,
+        "absolute_shift": 0.189189189189189
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 24,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.0083333333333333,
+        "absolute_shift": 0.0333333333333332
+      },
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "qft",
+        "logical_qubits": 24,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.8788927335640139,
+        "absolute_shift": 0.3888888888888888
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 4,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 8,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 8,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 12,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 12,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 16,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 16,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "efficient_su2",
+        "logical_qubits": 24,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 4,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_star",
+        "logical_qubits": 8,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.136363636363637,
+        "absolute_shift": 0.4285714285714292
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 4,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.8823529411764706,
+        "absolute_shift": 0.1999999999999999
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 8,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.0634920634920637,
+        "absolute_shift": 0.1538461538461542
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 8,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0,
+        "absolute_shift": 0.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 12,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.026086956521739,
+        "absolute_shift": 0.0714285714285711
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 12,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.989247311827957,
+        "absolute_shift": 0.0238095238095237
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 16,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.0301204819277108,
+        "absolute_shift": 0.0862068965517242
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 16,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.0239999999999996,
+        "absolute_shift": 0.0517241379310338
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 20,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.0186046511627909,
+        "absolute_shift": 0.0540540540540548
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 20,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.9822485207100592,
+        "absolute_shift": 0.0405405405405407
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 24,
+        "optimization_level": 1,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 0.9850187265917602,
+        "absolute_shift": 0.0444444444444447
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "qft",
+        "logical_qubits": 24,
+        "optimization_level": 3,
+        "n_solution_found": 0,
+        "n_no_solution_found": 10,
+        "n_trivial_sufficient": 0,
+        "label_invariant": false,
+        "systematic": false,
+        "relative_shift": 1.0333333333333334,
+        "absolute_shift": 0.0777777777777779
+      }
+    ],
+    "systematic_but_not_vf2_failed": [],
+    "mixed_classification_rows": [
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "per_topology_reason": "{\"cairo_heavy_hex_27\": \"TRIVIAL_SUFFICIENT\", \"cairo_heavy_hex_27_relabelled\": \"SOLUTION_FOUND\"}",
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "per_topology_reason": "{\"line_27\": \"TRIVIAL_SUFFICIENT\", \"line_27_relabelled\": \"SOLUTION_FOUND\"}",
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 8,
+        "optimization_level": 1,
+        "per_topology_reason": "{\"line_27\": \"TRIVIAL_SUFFICIENT\", \"line_27_relabelled\": \"SOLUTION_FOUND\"}",
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 12,
+        "optimization_level": 1,
+        "per_topology_reason": "{\"line_27\": \"TRIVIAL_SUFFICIENT\", \"line_27_relabelled\": \"SOLUTION_FOUND\"}",
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 16,
+        "optimization_level": 1,
+        "per_topology_reason": "{\"line_27\": \"TRIVIAL_SUFFICIENT\", \"line_27_relabelled\": \"SOLUTION_FOUND\"}",
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 20,
+        "optimization_level": 1,
+        "per_topology_reason": "{\"line_27\": \"TRIVIAL_SUFFICIENT\", \"line_27_relabelled\": \"SOLUTION_FOUND\"}",
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 24,
+        "optimization_level": 1,
+        "per_topology_reason": "{\"line_27\": \"TRIVIAL_SUFFICIENT\", \"line_27_relabelled\": \"SOLUTION_FOUND\"}",
+        "label_invariant": true,
+        "systematic": false,
+        "relative_shift": 1.0
+      }
+    ],
+    "trivial_sufficient_rows": [],
+    "base_vs_relabelled_verdict_disagreement": [
+      {
+        "base_topology": "cairo_heavy_hex_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "base_verdict": "TRIVIAL_SUFFICIENT",
+        "relabelled_verdict": "SOLUTION_FOUND"
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 4,
+        "optimization_level": 1,
+        "base_verdict": "TRIVIAL_SUFFICIENT",
+        "relabelled_verdict": "SOLUTION_FOUND"
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 8,
+        "optimization_level": 1,
+        "base_verdict": "TRIVIAL_SUFFICIENT",
+        "relabelled_verdict": "SOLUTION_FOUND"
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 12,
+        "optimization_level": 1,
+        "base_verdict": "TRIVIAL_SUFFICIENT",
+        "relabelled_verdict": "SOLUTION_FOUND"
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 16,
+        "optimization_level": 1,
+        "base_verdict": "TRIVIAL_SUFFICIENT",
+        "relabelled_verdict": "SOLUTION_FOUND"
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 20,
+        "optimization_level": 1,
+        "base_verdict": "TRIVIAL_SUFFICIENT",
+        "relabelled_verdict": "SOLUTION_FOUND"
+      },
+      {
+        "base_topology": "line_27",
+        "circuit_family": "ghz_chain",
+        "logical_qubits": 24,
+        "optimization_level": 1,
+        "base_verdict": "TRIVIAL_SUFFICIENT",
+        "relabelled_verdict": "SOLUTION_FOUND"
+      }
+    ]
+  },
+  "claim_verification": {
+    "efficient_su2_cairo_n12_n20_L1_L3_solution_found_penalty_1": {
+      "n_rows": 40,
+      "all_solution_found": true,
+      "all_penalty_1": true,
+      "pass": true,
+      "detail": [
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 11,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 22,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 33,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 44,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 55,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 12,
+          "optimization_level": 3,
+          "transpiler_seed": 11,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 12,
+          "optimization_level": 3,
+          "transpiler_seed": 22,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 12,
+          "optimization_level": 3,
+          "transpiler_seed": 33,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 12,
+          "optimization_level": 3,
+          "transpiler_seed": 44,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 12,
+          "optimization_level": 3,
+          "transpiler_seed": 55,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 11,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 22,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 33,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 44,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 55,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 20,
+          "optimization_level": 3,
+          "transpiler_seed": 11,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 20,
+          "optimization_level": 3,
+          "transpiler_seed": 22,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 20,
+          "optimization_level": 3,
+          "transpiler_seed": 33,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 20,
+          "optimization_level": 3,
+          "transpiler_seed": 44,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 20,
+          "optimization_level": 3,
+          "transpiler_seed": 55,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 11,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 22,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 33,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 44,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 55,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 12,
+          "optimization_level": 3,
+          "transpiler_seed": 11,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 12,
+          "optimization_level": 3,
+          "transpiler_seed": 22,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 12,
+          "optimization_level": 3,
+          "transpiler_seed": 33,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 12,
+          "optimization_level": 3,
+          "transpiler_seed": 44,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 12,
+          "optimization_level": 3,
+          "transpiler_seed": 55,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 11,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 22,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 33,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 44,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 55,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 20,
+          "optimization_level": 3,
+          "transpiler_seed": 11,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 20,
+          "optimization_level": 3,
+          "transpiler_seed": 22,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 20,
+          "optimization_level": 3,
+          "transpiler_seed": 33,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 20,
+          "optimization_level": 3,
+          "transpiler_seed": 44,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 20,
+          "optimization_level": 3,
+          "transpiler_seed": 55,
+          "vf2_stop_reason": "SOLUTION_FOUND",
+          "penalty": 1.0
+        }
+      ]
+    },
+    "ghz_chain_line_all_sizes_solution_found_penalty_1": {
+      "n_rows": 120,
+      "all_solution_found_strict": false,
+      "all_solved_or_trivial_sufficient": true,
+      "n_trivial_sufficient": 30,
+      "all_penalty_1": true,
+      "pass": true,
+      "note": "Strict SOLUTION_FOUND claim FAILS for the level-1 identity-labelled ghz_chain rows: VF2Layout is skipped there because CheckMap already finds the trivial layout swap-mapped (property_set['is_swap_mapped']=True), so VF2Layout_stop_reason is never set (NaN), not SOLUTION_FOUND. Penalty is still exactly 1.0 in every row. All level-3 ghz_chain/line rows and level-1 ghz_chain/line_27_relabelled rows do show strict SOLUTION_FOUND.",
+      "trivial_sufficient_rows": [
+        {
+          "topology": "line_27",
+          "logical_qubits": 4,
+          "optimization_level": 1,
+          "transpiler_seed": 11,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 4,
+          "optimization_level": 1,
+          "transpiler_seed": 22,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 4,
+          "optimization_level": 1,
+          "transpiler_seed": 33,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 4,
+          "optimization_level": 1,
+          "transpiler_seed": 44,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 4,
+          "optimization_level": 1,
+          "transpiler_seed": 55,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 8,
+          "optimization_level": 1,
+          "transpiler_seed": 11,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 8,
+          "optimization_level": 1,
+          "transpiler_seed": 22,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 8,
+          "optimization_level": 1,
+          "transpiler_seed": 33,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 8,
+          "optimization_level": 1,
+          "transpiler_seed": 44,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 8,
+          "optimization_level": 1,
+          "transpiler_seed": 55,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 11,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 22,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 33,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 44,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 12,
+          "optimization_level": 1,
+          "transpiler_seed": 55,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 16,
+          "optimization_level": 1,
+          "transpiler_seed": 11,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 16,
+          "optimization_level": 1,
+          "transpiler_seed": 22,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 16,
+          "optimization_level": 1,
+          "transpiler_seed": 33,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 16,
+          "optimization_level": 1,
+          "transpiler_seed": 44,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 16,
+          "optimization_level": 1,
+          "transpiler_seed": 55,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 11,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 22,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 33,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 44,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 20,
+          "optimization_level": 1,
+          "transpiler_seed": 55,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 11,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 22,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 33,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 44,
+          "penalty": 1.0
+        },
+        {
+          "topology": "line_27",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 55,
+          "penalty": 1.0
+        }
+      ]
+    },
+    "ghz_chain_cairo_n24_not_solution_found": {
+      "n_rows": 20,
+      "any_solution_found": false,
+      "all_no_solution_found": true,
+      "pass": true,
+      "detail": [
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 11,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.3043478260869565
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 22,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.3043478260869565
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 33,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.3043478260869565
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 44,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.3043478260869565
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 55,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.3043478260869565
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 24,
+          "optimization_level": 3,
+          "transpiler_seed": 11,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.3043478260869565
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 24,
+          "optimization_level": 3,
+          "transpiler_seed": 22,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.3043478260869565
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 24,
+          "optimization_level": 3,
+          "transpiler_seed": 33,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.3043478260869565
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 24,
+          "optimization_level": 3,
+          "transpiler_seed": 44,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.3043478260869565
+        },
+        {
+          "topology": "cairo_heavy_hex_27",
+          "logical_qubits": 24,
+          "optimization_level": 3,
+          "transpiler_seed": 55,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.217391304347826
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 11,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 3.739130434782609
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 22,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 3.217391304347826
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 33,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.5217391304347827
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 44,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 3.130434782608696
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 24,
+          "optimization_level": 1,
+          "transpiler_seed": 55,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.652173913043478
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 24,
+          "optimization_level": 3,
+          "transpiler_seed": 11,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 1.8695652173913044
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 24,
+          "optimization_level": 3,
+          "transpiler_seed": 22,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 3.0869565217391304
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 24,
+          "optimization_level": 3,
+          "transpiler_seed": 33,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.5217391304347827
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 24,
+          "optimization_level": 3,
+          "transpiler_seed": 44,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.739130434782609
+        },
+        {
+          "topology": "cairo_heavy_hex_27_relabelled",
+          "logical_qubits": 24,
+          "optimization_level": 3,
+          "transpiler_seed": 55,
+          "vf2_stop_reason": "NO_SOLUTION_FOUND",
+          "penalty": 2.652173913043478
+        }
+      ]
+    }
+  },
+  "sanity_check": {
+    "ghz_star_line_L3_n24": {
+      "n_rows": 5,
+      "median_penalty": 2.0869565217391304,
+      "canonical_expected": 2.087,
+      "deviation": 4.3478260869811436e-05,
+      "flag_deviation_gt_0_05": false,
+      "seed_penalties": [
+        {
+          "transpiler_seed": 11,
+          "penalty": 2.0869565217391304
+        },
+        {
+          "transpiler_seed": 22,
+          "penalty": 2.0869565217391304
+        },
+        {
+          "transpiler_seed": 33,
+          "penalty": 2.0869565217391304
+        },
+        {
+          "transpiler_seed": 44,
+          "penalty": 2.0869565217391304
+        },
+        {
+          "transpiler_seed": 55,
+          "penalty": 2.0869565217391304
+        }
+      ]
+    },
+    "identity_labelled_penalty_median_summary": {
+      "n_groups": 96,
+      "min_median": 1.0,
+      "max_median": 4.0
+    }
+  }
+}

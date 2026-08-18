@@ -1,0 +1,7 @@
+base_topology,optimization_level,configurations,label_invariant,invariant_fraction,systematic,systematic_fraction,median_relative_shift,geometric_mean_relative_shift,max_relative_shift,verdict
+cairo_heavy_hex_27,0,24,0,0.0,19,0.7916666666666666,1.5507736943907156,1.6243245096689494,7.0,label-sensitive
+cairo_heavy_hex_27,1,24,12,0.5,3,0.125,1.0,0.9950066511473862,1.358490566037736,label-sensitive
+cairo_heavy_hex_27,3,24,11,0.4583333333333333,0,0.0,1.0,0.9910744313557442,1.175438596491228,noise-only
+line_27,0,24,0,0.0,24,1.0,3.163989922846796,4.199623340096736,15.695652173913045,label-sensitive
+line_27,1,24,12,0.5,6,0.25,1.0,1.0756676832866368,1.63953488372093,label-sensitive
+line_27,3,24,13,0.5416666666666666,6,0.25,1.0,1.1738388544904064,2.7222222222222223,label-sensitive
