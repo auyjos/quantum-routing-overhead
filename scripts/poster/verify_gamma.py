@@ -45,7 +45,15 @@ check("heavy-hex pooled median", med(con, topology=CAIRO), "2.909")
 no_l0 = con[con.optimization_level != 0]
 check("line pooled, excl. L0", med(no_l0, topology=LINE), "2.140")
 check("heavy-hex pooled, excl. L0", med(no_l0, topology=CAIRO), "2.304")
-check("GHZ star on line", med(con, topology=LINE, circuit_family="ghz_star"), "3.299")
+# The deck now leads on the levels-1-and-3 figures, so those are what it must justify.
+no0 = con[con.optimization_level != 0]
+check("QFT on line, L1+L3", med(no0, topology=LINE, circuit_family="qft"), "2.321")
+check("QFT on heavy-hex, L1+L3", med(no0, topology=CAIRO, circuit_family="qft"), "2.897")
+check("EfficientSU2 on heavy-hex, L1+L3",
+      med(no0, topology=CAIRO, circuit_family="efficient_su2"), "2.125")
+check("EfficientSU2 on line, L1+L3",
+      med(no0, topology=LINE, circuit_family="efficient_su2"), "3.427")
+check("GHZ chain, both maps, L1+L3", med(no0, circuit_family="ghz_chain"), "1.000")
 check("line L0", med(con, topology=LINE, optimization_level=0), "3.904")
 check("line L3", med(con, topology=LINE, optimization_level=3), "1.991")
 check("heavy-hex L0", med(con, topology=CAIRO, optimization_level=0), "4.282")
@@ -76,6 +84,14 @@ per_labelling = star_sweep.groupby("topology").two_qubit_depth_penalty.median()
 check("GHZ star line L3 relabelling median", float(per_labelling.median()), "3.99", tol=5e-3)
 check("GHZ star line L3 relabelling min", float(per_labelling.min()), "2.00", tol=5e-3)
 check("GHZ star line L3 relabelling max", float(per_labelling.max()), "4.84", tol=5e-3)
+
+# level-0 relabelling medians, printed in "What survives, and what does not"
+sweep_l0 = sweep_raw[sweep_raw.optimization_level == 0]
+sweep_l0 = sweep_l0[sweep_l0.topology.map(is_sweep)]
+for base, printed in ((LINE, "10.57"), (CAIRO, "6.12")):
+    per_lab = (sweep_l0[sweep_l0.base == base]
+               .groupby("topology").two_qubit_depth_penalty.median())
+    check(f"L0 relabelling median, {base}", float(per_lab.median()), printed, tol=5e-3)
 
 spreads = dist[dist.optimization_level != 0].spread_ratio
 check("min L1/L3 across-labelling spread", float(spreads.min()), "1.06", tol=5e-3)

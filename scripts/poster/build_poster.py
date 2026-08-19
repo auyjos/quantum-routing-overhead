@@ -33,19 +33,56 @@ FIG_MM = 528          # figure column width at k = 1
 SIDE_MM = 252         # sidebar width at k = 1
 
 
-def b64(name):
-    path = FIGS_POSTER / f"{name}.png"
-    if not path.exists():
-        path = FIGS / f"{name}.png"
-    return base64.b64encode(path.read_bytes()).decode()
+# Section 04 runs the full page width. As one combined raster it printed at 137 dpi
+# against ~300 dpi for the column-width figures, and no single panel could be moved or
+# swapped in a layout tool. Split into three, and embedded as vector.
+PANELS = {"fig11_permutation_sweep": ["fig11a_relabelling_distribution",
+                                      "fig11b_reversal_robust",
+                                      "fig11c_layout_mechanism"]}
+
+
+def path_of(name, ext):
+    path = FIGS_POSTER / f"{name}.{ext}"
+    return path if path.exists() else FIGS / f"{name}.{ext}"
+
+
+def b64(name, ext="png"):
+    return base64.b64encode(path_of(name, ext).read_bytes()).decode()
+
+
+# The QR is drawn with imshow, so its SVG is a 262 px raster in a vector wrapper —
+# lower resolution than the plain PNG. Vector helps every other figure; not this one.
+RASTER_ONLY = {"fig9_repository_qr"}
+
+
+def src(name):
+    """SVG, so the figure is resolution-independent however large the page prints it."""
+    if name in RASTER_ONLY:
+        return f'data:image/png;base64,{b64(name, "png")}'
+    return f'data:image/svg+xml;base64,{b64(name, "svg")}'
+
+
+def aspect(name):
+    """Read from the raster twin — the panels are laid out to a common height."""
+    from PIL import Image
+    with Image.open(path_of(name, "png")) as im:
+        return im.size[0] / im.size[1]
 
 
 def img(name, width_mm=FIG_MM, fill=False):
     """`fill` lets the figure take the whole column instead of a fixed width."""
+    if name in PANELS:
+        # flex-grow proportional to aspect ratio makes the widths proportional to the
+        # aspects, which is the condition for the three panels to share one height.
+        cells = "".join(
+            f'<div style="flex:{aspect(pn):.4f} 1 0"><img class="figfill" '
+            f'src="{src(pn)}"></div>'
+            for pn in PANELS[name])
+        return f'<div class="panelrow">{cells}</div>'
     if fill:
-        return f'<img class="fig figfill" src="data:image/png;base64,{b64(name)}">'
+        return f'<img class="fig figfill" src="{src(name)}">'
     return (f'<img class="fig" style="width:calc({width_mm}mm * var(--k))" '
-            f'src="data:image/png;base64,{b64(name)}">')
+            f'src="{src(name)}">')
 
 
 # The lead number is the one that survives the control. The pooled figure including
@@ -176,7 +213,9 @@ html, body {{ width: 841mm; background: {PAPER}; }}
 body {{ color: {INK}; font-family: 'Source Sans 3', sans-serif;
         padding: calc(22mm * var(--k)) calc(20mm * var(--k)); }}
 .fig {{ display: block; }}
-.figfill {{ width: 100%; }}
+.figfill {{ width: 100%; display: block; }}
+.panelrow {{ display: flex; gap: calc(12mm * var(--k));
+             align-items: flex-start; }}
 
 h1 {{ font-size: calc(30mm * var(--k)); line-height: 1.02; font-weight: 700;
       letter-spacing: calc(-0.6mm * var(--k)); }}
@@ -314,7 +353,7 @@ relabellings, while some circuit-specific conclusions become more nuanced.</div>
       pinned by digest in the test suite.</p>
       <p style="margin-top:calc(2.2mm * var(--k))"><code>github.com/auyjos/quantum-routing-overhead</code></p>
     </div>
-    <img class="qr" src="data:image/png;base64,{b64("fig9_repository_qr")}">
+    <img class="qr" src="{src("fig9_repository_qr")}">
   </div>
 </div>
 
@@ -331,14 +370,17 @@ print("wrote poster_a0.html", len(HTML) // 1024, "KB")
 # opaque blob, and would make the file 2 MB instead of 20 kB.
 CANVA_BASE = ("https://raw.githubusercontent.com/auyjos/quantum-routing-overhead/"
               "master/output/canva/figures")
-CANVA_FIGS = [name for *_, name, _ in SECTIONS] + ["fig9_repository_qr"]
+CANVA_FIGS = []
+for *_, _name, _ in SECTIONS:
+    CANVA_FIGS.extend(PANELS.get(_name, [_name]))
+CANVA_FIGS.append("fig9_repository_qr")
 
 scale = pathlib.Path("poster_scale.txt")
 if scale.exists():
     k = scale.read_text().strip()
     canva = HTML.replace(":root { --k: 1; }", f":root {{ --k: {k}; }}")
     for name in CANVA_FIGS:
-        inlined = f'src="data:image/png;base64,{b64(name)}"'
+        inlined = f'src="{src(name)}"'
         assert inlined in canva, f"no inlined copy of {name} to swap for a URL"
         canva = canva.replace(inlined, f'src="{CANVA_BASE}/{name}.png"')
     canva = canva.replace("<body>", (

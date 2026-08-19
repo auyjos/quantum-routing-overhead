@@ -89,8 +89,10 @@ def save(fig, name, outdir="figs"):
     os.makedirs(outdir, exist_ok=True)
     # Poster figures are printed larger than their native size, so they are rasterised
     # finer: a figure shown at 1.5x its native width would otherwise fall under 150 dpi
-    # at A0, which is visible as soft type on a printed poster.
-    for ext, dpi in (("png", 300 if POSTER else 220),):
+    # at A0, which is visible as soft type on a printed poster. QRO_DPI raises it further
+    # for figures that run the full page width.
+    dpi = int(os.environ.get("QRO_DPI", 300 if POSTER else 220))
+    for ext, dpi in (("png", dpi),):
         fig.savefig(f"{outdir}/{name}.{ext}", dpi=dpi, bbox_inches="tight",
                     pad_inches=0.28, facecolor=PAPER)
     fig.savefig(f"{outdir}/{name}.svg", bbox_inches="tight",

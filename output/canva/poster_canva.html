@@ -1,14 +1,16 @@
 <!doctype html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root { --k: 0.7962; }
+:root { --k: 0.867; }
 @page { size: 841mm 1189mm; margin: 0; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 841mm; background: #FBFBF9; }
 body { padding: 0 !important; } body { color: #141B2D; font-family: 'Source Sans 3', sans-serif;
         padding: calc(22mm * var(--k)) calc(20mm * var(--k)); }
 .fig { display: block; }
-.figfill { width: 100%; }
+.figfill { width: 100%; display: block; }
+.panelrow { display: flex; gap: calc(12mm * var(--k));
+             align-items: flex-start; }
 
 h1 { font-size: calc(30mm * var(--k)); line-height: 1.02; font-weight: 700;
       letter-spacing: calc(-0.6mm * var(--k)); }
@@ -151,7 +153,7 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 0.94em; }
   <div class="sechead"><span class="n">04</span><h2>The control: labelling can dominate the topology effect</h2>
     <span class="capinline">24 deterministically derived relabellings of each constrained map &mdash; same graph, same edges, same diameter, only the physical-qubit numbering changes &middot; SHA-256 derivation, pinned by digest, reproducible on any platform</span></div>
   <div class="band"><div class="finding"><div class="fhead">Labelling is a confound, and it is measurable</div><div class="fbody">Relabelling the same graph moves level-0 results by up to <b>15.70&times;</b> &mdash; about three times the largest topology effect measured anywhere here. This study's labelling is more favourable than every relabelling tested.</div></div><div class="finding"><div class="fhead">But the topology effect survives</div><div class="fbody">At levels 1 and 3 the across-labelling spread collapses to <b>1.06&ndash;1.23&times;</b>, and the QFT / EfficientSU2 ordering holds in <b>24 of 24</b> relabellings. The mechanism is exact: label-invariant wherever VF2Layout embeds, <b>28 of 28</b>.</div></div><div class="finding"><div class="fhead">And one claim did not survive</div><div class="fbody">GHZ star looked cheap on the line under this labelling &mdash; <b>1.87&times;</b> at level 3, against a relabelling median of <b>3.99&times;</b>. Under relabelling the star is cheaper on heavy-hex in <b>22 of 24</b>. Reported as labelling, not connectivity.</div></div></div>
-  <img class="fig figfill" src="https://raw.githubusercontent.com/auyjos/quantum-routing-overhead/master/output/canva/figures/fig11_permutation_sweep.png">
+  <div class="panelrow"><div style="flex:1.0696 1 0"><img class="figfill" src="https://raw.githubusercontent.com/auyjos/quantum-routing-overhead/master/output/canva/figures/fig11a_relabelling_distribution.png"></div><div style="flex:0.9503 1 0"><img class="figfill" src="https://raw.githubusercontent.com/auyjos/quantum-routing-overhead/master/output/canva/figures/fig11b_reversal_robust.png"></div><div style="flex:0.9695 1 0"><img class="figfill" src="https://raw.githubusercontent.com/auyjos/quantum-routing-overhead/master/output/canva/figures/fig11c_layout_mechanism.png"></div></div>
 </div>
 
 <div class="concl"><span class="lab">Conclusion</span>
