@@ -96,8 +96,10 @@ SECTIONS = [
        "alone. A single-seed benchmark would have reported any point in that range as the "
        "result."),
       ("It does not vanish with optimization",
+       # Superscript digits as literal characters, not <sup>: Canva's HTML importer
+       # puts a <sup> run on its own line, which broke this sentence in three.
        "Level 0 carries the larger <i>relative</i> dispersion despite its deterministic "
-       "layout (p = 2.6&times;10<sup>&minus;6</sup>), but spread persists at level 3.")],
+       "layout (p = 2.6&times;10&#8315;&#8310;), but spread persists at level 3.")],
      "fig13_seed_focus", False),
 
     ("04", "The control: labelling can dominate the topology effect",
@@ -111,8 +113,10 @@ SECTIONS = [
       ("But the topology effect survives",
        "At levels 1 and 3 the across-labelling spread collapses to "
        "<b>1.06&ndash;1.23&times;</b>, and the QFT / EfficientSU2 ordering holds in "
+       # Plain, not <code>: the monospace swap made this line taller than its box on
+       # import and clipped the tail. The footer keeps <code>, where there is room.
        "<b>24 of 24</b> relabellings. The mechanism is exact: label-invariant wherever "
-       "<code>VF2Layout</code> embeds, <b>28 of 28</b>."),
+       "VF2Layout embeds, <b>28 of 28</b>."),
       ("And one claim did not survive",
        "GHZ star looked cheap on the line under this labelling &mdash; <b>1.87&times;</b> "
        "at level 3, against a relabelling median of <b>3.99&times;</b>. Under relabelling "
