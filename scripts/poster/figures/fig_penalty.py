@@ -34,7 +34,7 @@ LEVELS = [0, 1, 3]
 # scaled down to fit and would lose more type size than the extra rows gain.
 ROWS, COLS = LEVELS, S.FAMILY_ORDER
 fig, axes = plt.subplots(3, 4, sharey=True, sharex=True,
-                         figsize=(16.4, 7.8) if S.POSTER else (17.5, 11.4))
+                         figsize=(15.6, 6.2) if S.POSTER else (17.5, 11.4))
 
 ymax = 0.0
 for r, lvl in enumerate(ROWS):
@@ -60,11 +60,14 @@ for r, lvl in enumerate(ROWS):
             ymax = max(ymax, float(np.nanmax(q75.values)))
 
         if r == 0:
-            ax.set_title(S.FAMILY_LABEL[fam], fontsize=17 if S.POSTER else 16,
-                         pad=14)
+            ax.set_title(S.FAMILY_LABEL[fam], fontsize=19 if S.POSTER else 16,
+                         pad=12)
         if r == len(ROWS) - 1:
-            ax.set_xlabel("Logical qubits", fontsize=11.5)
+            ax.set_xlabel("Logical qubits", fontsize=14 if S.POSTER else 11.5)
         ax.set_xticks(S.SIZES)
+        # The poster prints this grid at close to its native width, so the tick type has
+        # to be set here -- there is no upscaling to enlarge it later.
+        ax.tick_params(labelsize=12.5 if S.POSTER else 10)
         S.strip(ax)
 
     # Facet strip on the right edge, so the whole left gutter belongs to the one shared
@@ -72,13 +75,13 @@ for r, lvl in enumerate(ROWS):
     axes[r, -1].annotate(f"optimization\nlevel {lvl}", xy=(1, 0.5),
                          xycoords="axes fraction", xytext=(18, 0),
                          textcoords="offset points", rotation=270,
-                         ha="center", va="center", fontsize=14 if S.POSTER else 13.5,
+                         ha="center", va="center", fontsize=15 if S.POSTER else 13.5,
                          fontweight="bold", color=S.INK, linespacing=1.4,
                          multialignment="center")
 
 axes[0, 0].set_ylim(0.55, ymax * 1.08)
 # The y axis is shared by every panel, so it is labelled once for the whole grid.
-fig.supylabel(ylab, fontsize=13.5, x=0.012)
+fig.supylabel(ylab, fontsize=15 if S.POSTER else 13.5, x=0.012)
 
 # One shared legend for all twelve panels. Labelling series inside the fourth panel
 # reads as though the labels belong to that panel alone; the series are identical
@@ -93,8 +96,9 @@ handles = [
     for topo in S.TOPO_ORDER
 ]
 legend = fig.legend(handles=handles, loc="upper center", ncol=3, frameon=False,
-                    fontsize=13.5, handlelength=2.6, columnspacing=3.4,
-                    bbox_to_anchor=(0.5, 0.928 if not S.POSTER else 0.985))
+                    fontsize=15 if S.POSTER else 13.5, handlelength=2.6,
+                    columnspacing=3.4,
+                    bbox_to_anchor=(0.5, 0.928 if not S.POSTER else 0.995))
 for text in legend.get_texts():
     text.set_fontweight("bold")
 
@@ -111,7 +115,7 @@ if not S.POSTER:
              "seeds   ·   Complete is the 1× denominator by construction",
              ha="center", fontsize=11.5, color=S.INK_SOFT)
 fig.subplots_adjust(wspace=0.10, hspace=0.24,
-                    top=0.828 if not S.POSTER else 0.876,
+                    top=0.828 if not S.POSTER else 0.855,
                     left=0.062 if not S.POSTER else 0.055,
                     right=0.958 if not S.POSTER else 0.962)
 S.save(fig, fname)

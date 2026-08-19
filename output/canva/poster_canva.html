@@ -1,0 +1,185 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root { --k: 0.7962; }
+@page { size: 841mm 1189mm; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 841mm; background: #FBFBF9; }
+body { padding: 0 !important; } body { color: #141B2D; font-family: 'Source Sans 3', sans-serif;
+        padding: calc(22mm * var(--k)) calc(20mm * var(--k)); }
+.fig { display: block; }
+.figfill { width: 100%; }
+
+h1 { font-size: calc(30mm * var(--k)); line-height: 1.02; font-weight: 700;
+      letter-spacing: calc(-0.6mm * var(--k)); }
+.sub { font-size: calc(12.5mm * var(--k)); font-weight: 300; color: #59617A;
+        margin-top: calc(3mm * var(--k)); }
+.byline { font-size: calc(8mm * var(--k)); margin-top: calc(4mm * var(--k)); font-weight: 600; }
+.byline span { font-weight: 300; color: #59617A; }
+
+/* the unexpected result, stated before the reader reaches any figure */
+.flash { display: flex; align-items: baseline; gap: calc(6mm * var(--k));
+          margin-top: calc(6mm * var(--k));
+          padding: calc(5.5mm * var(--k)) calc(7mm * var(--k));
+          background: #fff; border: calc(0.9mm * var(--k)) solid #C2413F;
+          border-radius: calc(3mm * var(--k)); }
+.flash .tag { font-size: calc(7.6mm * var(--k)); font-weight: 700; color: #C2413F;
+               letter-spacing: calc(0.3mm * var(--k)); text-transform: uppercase;
+               white-space: nowrap; }
+.flash .txt { font-size: calc(9.4mm * var(--k)); font-weight: 600; line-height: 1.24; }
+
+.qbar { display: flex; gap: calc(9mm * var(--k)); align-items: flex-start;
+         margin-top: calc(6mm * var(--k)); }
+.q { font-size: calc(8.6mm * var(--k)); font-weight: 600; line-height: 1.26; flex: 1.3; }
+.qnote { font-size: calc(6.6mm * var(--k)); color: #59617A; line-height: 1.36; flex: 1;
+          border-left: calc(0.8mm * var(--k)) solid #D8DBE4;
+          padding-left: calc(5.5mm * var(--k)); }
+
+.stats { display: flex; gap: calc(5mm * var(--k)); margin-top: calc(6mm * var(--k)); }
+.stat { flex: 1; border: calc(0.6mm * var(--k)) solid #D8DBE4; background: #fff;
+         padding: calc(4.5mm * var(--k)) calc(5mm * var(--k));
+         border-radius: calc(3mm * var(--k)); }
+.stat:first-child { border-color: #141B2D; border-width: calc(1.1mm * var(--k)); }
+.stat .v { font-size: calc(12mm * var(--k)); font-weight: 700;
+            letter-spacing: calc(-0.25mm * var(--k)); }
+.stat .k { font-size: calc(6.2mm * var(--k)); color: #59617A;
+            margin-top: calc(1.6mm * var(--k)); line-height: 1.28; }
+
+.srow { display: flex; gap: calc(20mm * var(--k)); align-items: flex-start;
+         margin-top: calc(11mm * var(--k)); padding-top: calc(5mm * var(--k));
+         border-top: calc(0.6mm * var(--k)) solid #D8DBE4; }
+.srow.full { display: block; border-top-color: #141B2D;
+              border-top-width: calc(1.1mm * var(--k)); }
+.sside { width: calc(252mm * var(--k)); flex: none; }
+.sfig { flex: 1; min-width: 0; }
+.sechead { display: flex; align-items: baseline; gap: calc(4mm * var(--k)); }
+.sechead .n { font-family: 'JetBrains Mono', monospace; font-size: calc(7.6mm * var(--k));
+               font-weight: 600; color: #C2413F; }
+.sechead h2 { font-size: calc(10.6mm * var(--k)); font-weight: 700; line-height: 1.1;
+               letter-spacing: calc(-0.2mm * var(--k)); }
+.capinline { font-size: calc(7.2mm * var(--k)); color: #59617A; font-weight: 300;
+              line-height: 1.3; margin-left: auto; max-width: calc(400mm * var(--k));
+              text-align: right; }
+.cap { font-size: calc(8.0mm * var(--k)); color: #59617A; font-weight: 300;
+        line-height: 1.3; margin-top: calc(3mm * var(--k));
+        padding-bottom: calc(4mm * var(--k));
+        border-bottom: calc(0.6mm * var(--k)) solid #D8DBE4; }
+.finding { margin-top: calc(4.5mm * var(--k)); }
+.fhead { font-size: calc(10.6mm * var(--k)); font-weight: 700; line-height: 1.14;
+          margin-bottom: calc(1.6mm * var(--k)); }
+.fbody { font-size: calc(9.7mm * var(--k)); line-height: 1.34; }
+.band { display: flex; gap: calc(11mm * var(--k));
+         margin: calc(4.5mm * var(--k)) 0 calc(1mm * var(--k)); }
+.band .finding { flex: 1; margin-top: 0; }
+
+.concl { margin-top: calc(10mm * var(--k));
+          padding: calc(6mm * var(--k)) calc(8mm * var(--k));
+          background: #141B2D; color: #FBFBF9; border-radius: calc(3mm * var(--k));
+          font-size: calc(8.8mm * var(--k)); line-height: 1.3; font-weight: 600; }
+.concl b { color: #7FD8E4; }
+.concl .lab { display: block; font-size: calc(6mm * var(--k)); font-weight: 700;
+               letter-spacing: calc(0.4mm * var(--k)); text-transform: uppercase;
+               color: #9AA3B8; margin-bottom: calc(2.4mm * var(--k)); }
+
+.foot { display: flex; gap: calc(8mm * var(--k)); margin-top: calc(8mm * var(--k));
+         padding-top: calc(4.5mm * var(--k));
+         border-top: calc(0.6mm * var(--k)) solid #D8DBE4; }
+.foot h3 { font-size: calc(6.6mm * var(--k)); font-weight: 700;
+            margin-bottom: calc(2mm * var(--k)); }
+.foot li { font-size: calc(5.6mm * var(--k)); line-height: 1.34; color: #59617A;
+            margin-left: calc(5mm * var(--k)); }
+.foot p { font-size: calc(5.6mm * var(--k)); line-height: 1.38; color: #59617A; }
+code { font-family: 'JetBrains Mono', monospace; font-size: 0.94em; }
+.qr { width: calc(46mm * var(--k)); }
+</style></head><body>
+<div data-document-role="page" data-label="Routing overhead in quantum circuit compilation" style="width:841mm; min-height:1189mm; box-sizing:border-box; padding:calc(22mm * var(--k)) calc(20mm * var(--k)); background:#FBFBF9;">
+
+<h1>Quantifying Routing Overhead in Quantum Circuit Compilation</h1>
+<div class="sub">A controlled comparison of hardware topology and the hidden effect of physical-qubit labelling</div>
+<div class="byline">Jos&eacute; Andr&eacute;s Auy&oacute;n C&oacute;bar<span>&nbsp;&nbsp;&middot;&nbsp;&nbsp;Universidad del Valle de Guatemala&nbsp;&nbsp;&middot;&nbsp;&nbsp;WEH Quantum Science and Technology Seminar</span></div>
+
+<div class="flash">
+  <span class="tag">Unexpected result</span>
+  <span class="txt">Physical-qubit labelling can dominate the apparent topology effect.
+  Relabelling the <i>same</i> graph moves optimization-level-0 results by up to
+  <b>15.70&times;</b> &mdash; and one of this study's own conclusions did not survive the
+  control.</span>
+</div>
+
+<div class="qbar">
+  <div class="q">How much does restricted qubit connectivity inflate compiled quantum
+  circuits, which interaction patterns are most sensitive to hardware topology &mdash; and
+  how much of the measured effect is connectivity rather than how the physical qubits
+  happen to be numbered?</div>
+  <div class="qnote">A compiler study, not a physics demonstration: it measures compiler
+  output under modelled connectivity constraints, not QPU fidelity, and makes no
+  quantum-advantage claim.<br><br>
+  <b>1,080 canonical compilations</b> &mdash; 4 circuit families &times; 6 sizes
+  (4&ndash;24) &times; 3 topologies at 27 physical qubits &times; 3 optimization levels
+  &times; 5 fixed seeds &mdash; plus <b>20,040 in the control</b>: 17,280 relabelling
+  sweep + 1,800 matched baselines + 960 <code>VF2Layout</code> instrumentation. All under
+  Qiskit 2.5.1.</div>
+</div>
+
+<div class="stats"><div class="stat"><div class="v">2.140&times; / 2.304&times;</div><div class="k">Robust topology penalty &mdash; line / heavy-hex, levels 1 and 3</div></div><div class="stat"><div class="v">15.70&times;</div><div class="k">Largest level-0 shift from relabelling the <i>same</i> graph</div></div><div class="stat"><div class="v">24 of 24</div><div class="k">Relabellings that preserve the QFT / EfficientSU2 ordering</div></div><div class="stat"><div class="v">1,080 / 1,080</div><div class="k">Canonical results reproduced exactly on a clean rebuild</div></div></div>
+
+<div class="srow">
+  <div class="sside">
+    <div class="sechead"><span class="n">01</span><h2>Routing overhead is real</h2></div>
+    <div class="cap">penalty = constrained-topology two-qubit depth &divide; matched complete-connectivity depth &middot; point = median of 5 seeds, band = their IQR</div>
+    <div class="finding"><div class="fhead">Connectivity costs depth</div><div class="fbody">Excluding level 0, the median penalty is <b>2.140&times;</b> on the line and <b>2.304&times;</b> on heavy-hex. Including it, <b>2.691&times;</b> and <b>2.909&times;</b> &mdash; but section 04 shows why level 0 carries no topology claim.</div></div><div class="finding"><div class="fhead">Optimization pays for itself</div><div class="fbody">Level 3 roughly halves the penalty against level 0: <b>3.904&times; &rarr; 1.991&times;</b> on the line, <b>4.282&times; &rarr; 2.174&times;</b> on heavy-hex, at about 5&times; the compile time.</div></div>
+  </div>
+  <div class="sfig"><img class="fig" style="width:calc(528mm * var(--k))" src="https://raw.githubusercontent.com/auyjos/quantum-routing-overhead/master/output/canva/figures/fig2_two_qubit_depth_penalty.png"></div>
+</div>
+<div class="srow">
+  <div class="sside">
+    <div class="sechead"><span class="n">02</span><h2>Interaction structure decides which topology pays</h2></div>
+    <div class="cap">median over levels 1 and 3, all sizes and seeds &middot; level 0 excluded throughout, for the reason given in section 04</div>
+    <div class="finding"><div class="fhead">Shape beats sparsity</div><div class="fbody">GHZ chain sits at exactly <b>1.000&times;</b> on both maps &mdash; the line already <i>is</i> its interaction graph. QFT is cheaper on the line (<b>2.321&times;</b> against <b>2.897&times;</b>) while EfficientSU2 is cheaper on heavy-hex (<b>2.125&times;</b> against <b>3.427&times;</b>). The ordering reverses between two dense circuits on identical hardware.</div></div>
+  </div>
+  <div class="sfig"><img class="fig" style="width:calc(528mm * var(--k))" src="https://raw.githubusercontent.com/auyjos/quantum-routing-overhead/master/output/canva/figures/fig12_interaction_structure.png"></div>
+</div>
+<div class="srow">
+  <div class="sside">
+    <div class="sechead"><span class="n">03</span><h2>The compiler itself is stochastic</h2></div>
+    <div class="cap">five fixed transpiler seeds (11, 22, 33, 44, 55) &middot; nothing else about the compilation changes between the dots on a row</div>
+    <div class="finding"><div class="fhead">One circuit, five answers</div><div class="fbody">The widest configuration spans <b>5.419&times; to 7.527&times;</b> on seed choice alone. A single-seed benchmark would have reported any point in that range as the result.</div></div><div class="finding"><div class="fhead">It does not vanish with optimization</div><div class="fbody">Level 0 carries the larger <i>relative</i> dispersion despite its deterministic layout (p = 2.6&times;10<sup>&minus;6</sup>), but spread persists at level 3.</div></div>
+  </div>
+  <div class="sfig"><img class="fig" style="width:calc(528mm * var(--k))" src="https://raw.githubusercontent.com/auyjos/quantum-routing-overhead/master/output/canva/figures/fig13_seed_focus.png"></div>
+</div>
+<div class="srow full">
+  <div class="sechead"><span class="n">04</span><h2>The control: labelling can dominate the topology effect</h2>
+    <span class="capinline">24 deterministically derived relabellings of each constrained map &mdash; same graph, same edges, same diameter, only the physical-qubit numbering changes &middot; SHA-256 derivation, pinned by digest, reproducible on any platform</span></div>
+  <div class="band"><div class="finding"><div class="fhead">Labelling is a confound, and it is measurable</div><div class="fbody">Relabelling the same graph moves level-0 results by up to <b>15.70&times;</b> &mdash; about three times the largest topology effect measured anywhere here. This study's labelling is more favourable than every relabelling tested.</div></div><div class="finding"><div class="fhead">But the topology effect survives</div><div class="fbody">At levels 1 and 3 the across-labelling spread collapses to <b>1.06&ndash;1.23&times;</b>, and the QFT / EfficientSU2 ordering holds in <b>24 of 24</b> relabellings. The mechanism is exact: label-invariant wherever <code>VF2Layout</code> embeds, <b>28 of 28</b>.</div></div><div class="finding"><div class="fhead">And one claim did not survive</div><div class="fbody">GHZ star looked cheap on the line under this labelling &mdash; <b>1.87&times;</b> at level 3, against a relabelling median of <b>3.99&times;</b>. Under relabelling the star is cheaper on heavy-hex in <b>22 of 24</b>. Reported as labelling, not connectivity.</div></div></div>
+  <img class="fig figfill" src="https://raw.githubusercontent.com/auyjos/quantum-routing-overhead/master/output/canva/figures/fig11_permutation_sweep.png">
+</div>
+
+<div class="concl"><span class="lab">Conclusion</span>
+Restricted connectivity does impose measurable routing overhead &mdash; <b>2.140&times;</b> on
+the line and <b>2.304&times;</b> on heavy-hex &mdash; but compiler behaviour can confound
+topology with physical-qubit labelling. Once the level-0 labelling effect is separated out the
+topology penalty remains, and its circuit-structure ordering holds in <b>24 of 24</b>
+relabellings, while some circuit-specific conclusions become more nuanced.</div>
+
+<div class="foot">
+  <div style="flex:1"><h3>Limitations</h3><ul><li>Compiler-level study, not physical hardware execution.</li><li>One graph per topology class &mdash; heavy-hex is Cairo's specific 27-node graph.</li><li>Depends on the tested families, sizes, and the optimization set {0, 1, 3}.</li><li>Five seeds and 24 relabellings characterise, but do not exhaust, either space.</li></ul></div>
+  <div style="flex:1"><h3>Where level 0 stands</h3>
+    <p>Level 0 is a declared Qiskit preset and no stored value is changed, but it pins the
+    layout to the identity permutation, so it measures numbering as much as connectivity.
+    Every topology claim on this poster excludes it. Where an exact embedding exists the
+    result is label-invariant, <b>28 of 28</b>; every systematic shift falls where
+    <code>VF2Layout</code> fails, <b>15 of 15</b>. No exceptions in either direction.</p></div>
+  <div style="flex:1; display:flex; gap:calc(5mm * var(--k)); align-items:flex-start">
+    <div><h3>Reproducible benchmark</h3>
+      <p>Python 3.12 &middot; Qiskit 2.5.1 &middot; fixed seeds &middot; locked
+      dependencies. Recompiling all 1,080 canonical points reproduced the stored metrics
+      <b>exactly, 1,080 of 1,080</b>. Sweep conditions derive from a SHA-256 keystream,
+      pinned by digest in the test suite.</p>
+      <p style="margin-top:calc(2.2mm * var(--k))"><code>github.com/auyjos/quantum-routing-overhead</code></p>
+    </div>
+    <img class="qr" src="https://raw.githubusercontent.com/auyjos/quantum-routing-overhead/master/output/canva/figures/fig9_repository_qr.png">
+  </div>
+</div>
+
+</div>
+</body></html>

@@ -237,10 +237,10 @@ _body = (
     f"relabelling median of {np.median(_star_rand):.2f}× "
     f"(range {min(_star_rand):.2f}–{max(_star_rand):.2f}×)."
 )
-if S.POSTER:
-    import textwrap
-    _body = "\n".join("\n".join(textwrap.wrap(part, 196)) or part
-                      for part in _body.split("\n"))
-fig.text(0.5, -0.10, _body, ha="center",
-         fontsize=11 if not S.POSTER else 11.6, color=S.INK, linespacing=1.7)
+if not S.POSTER:
+    # On the poster this caption said, in different words, exactly what the three
+    # findings printed directly above the figure already say. Duplicating it cost about
+    # 50 mm of page height, which is type size everywhere else on the sheet.
+    fig.text(0.5, -0.10, _body, ha="center", fontsize=11, color=S.INK,
+             linespacing=1.7)
 S.save(fig, "fig11_permutation_sweep")

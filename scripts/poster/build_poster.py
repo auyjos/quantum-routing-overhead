@@ -6,13 +6,19 @@ multiple of `--k`, which `render_poster.py` binary-searches for the largest valu
 still fits one A0 page — so the layout is fitted rather than hand-tuned, and stays
 correct if a figure is swapped for one with a different aspect ratio.
 
-One section per row. Each row pairs its figure with a sidebar carrying that section's
-heading, its caption and the finding it supports, so the space either side of a
-wide figure holds the argument instead of sitting empty — and the findings print at
-poster size rather than being compressed into a block at the foot of the page.
+Narrative order, not benchmark order: routing overhead is real, interaction structure
+decides which topology pays, the compiler is stochastic, and then the control showing
+that physical-qubit labelling can dominate all of it at level 0. That result is
+announced at the top rather than left for the reader to find at the bottom.
 
-Every numeric claim is copied from `poster/poster-content.md` and re-checked against the
-journalled run data by `verify_poster.py`.
+One section per row. Sections 01-03 pair a figure with a sidebar carrying that section's
+heading, caption and finding. Section 04 runs full width with its text as a band above,
+because it is the actual contribution and earns the space.
+
+Type is sized for reading at 1-2 m: body copy above 22 pt at A0, captions above 18 pt.
+That budget is what governs how much prose the page can carry.
+
+Every numeric claim is re-derived from the journalled run data by `verify_poster.py`.
 """
 import base64
 import pathlib
@@ -23,8 +29,8 @@ FIGS, FIGS_POSTER = pathlib.Path("figs"), pathlib.Path("figs_poster")
 INK, INK_SOFT, RULE, PAPER = "#141B2D", "#59617A", "#D8DBE4", "#FBFBF9"
 TEAL, VIOLET, FLAG = "#0E8C9E", "#7A3FD4", "#C2413F"
 
-FIG_MM = 560          # figure column width at k = 1
-SIDE_MM = 214         # sidebar width at k = 1
+FIG_MM = 528          # figure column width at k = 1
+SIDE_MM = 252         # sidebar width at k = 1
 
 
 def b64(name):
@@ -34,77 +40,91 @@ def b64(name):
     return base64.b64encode(path.read_bytes()).decode()
 
 
-def img(name, width_mm=FIG_MM):
+def img(name, width_mm=FIG_MM, fill=False):
+    """`fill` lets the figure take the whole column instead of a fixed width."""
+    if fill:
+        return f'<img class="fig figfill" src="data:image/png;base64,{b64(name)}">'
     return (f'<img class="fig" style="width:calc({width_mm}mm * var(--k))" '
             f'src="data:image/png;base64,{b64(name)}">')
 
 
+# The lead number is the one that survives the control. The pooled figure including
+# level 0 is reported in section 01, where the caveat sits directly beside it.
 STATS = [
-    ("2.691&times; / 2.909&times;", "Pooled median two-qubit depth penalty, line / heavy-hex"),
-    ("2.140&times; / 2.304&times;", "The same, excluding the level-0 stratum the control rules out"),
-    ("1.000&times;", "GHZ chain on the line, and circular EfficientSU2 on heavy-hex at n = 12 and 20"),
-    ("21 / {12,&nbsp;20}", "Heavy-hex longest simple path and cycle spectrum &mdash; forced by the graph"),
+    ("2.140&times; / 2.304&times;",
+     "Robust topology penalty &mdash; line / heavy-hex, levels 1 and 3"),
+    ("15.70&times;",
+     "Largest level-0 shift from relabelling the <i>same</i> graph"),
+    ("24 of 24",
+     "Relabellings that preserve the QFT / EfficientSU2 ordering"),
+    ("1,080 / 1,080",
+     "Canonical results reproduced exactly on a clean rebuild"),
 ]
 
-# (number, heading, caption, [(finding heading, finding body), ...], figure)
+# (number, heading, caption, [(finding heading, finding body), ...], figure, full-bleed)
 SECTIONS = [
-    ("01", "Primary result &mdash; two-qubit depth penalty",
-     "penalty = constrained-topology value &divide; matched complete-connectivity value "
-     "&middot; point = median of the 5 fixed seeds, band = their IQR &middot; matching "
-     "fixes family, size, circuit hash, level, seed and basis",
-     [("Connectivity",
-       "Constrained connectivity commonly raises two-qubit depth: median <b>2.691&times;</b> "
-       "on the line and <b>2.909&times;</b> on heavy-hex, 360 compilations each. Excluding "
-       "level 0, <b>2.140&times;</b> and <b>2.304&times;</b>."),
-      ("Optimization",
-       "Level 3 roughly halves the penalty against level 0 &mdash; <b>3.904&times; &rarr; "
-       "1.991&times;</b> on the line, <b>4.282&times; &rarr; 2.174&times;</b> on heavy-hex "
-       "&mdash; at about 5&times; the local compile time.")],
-     "fig2_two_qubit_depth_penalty"),
+    ("01", "Routing overhead is real",
+     "penalty = constrained-topology two-qubit depth &divide; matched "
+     "complete-connectivity depth &middot; point = median of 5 seeds, band = their IQR",
+     [("Connectivity costs depth",
+       "Excluding level 0, the median penalty is <b>2.140&times;</b> on the line and "
+       "<b>2.304&times;</b> on heavy-hex. Including it, <b>2.691&times;</b> and "
+       "<b>2.909&times;</b> &mdash; but section 04 shows why level 0 carries no topology "
+       "claim."),
+      ("Optimization pays for itself",
+       "Level 3 roughly halves the penalty against level 0: <b>3.904&times; &rarr; "
+       "1.991&times;</b> on the line, <b>4.282&times; &rarr; 2.174&times;</b> on "
+       "heavy-hex, at about 5&times; the compile time.")],
+     "fig2_two_qubit_depth_penalty", False),
 
-    ("02", "Interaction structure matters",
-     "same logical task, same qubit count, same compiler settings &mdash; only the shape "
-     "of the required interactions differs",
-     [("Circuit structure",
-       "Interaction shape dominates. GHZ chain on the line stays at exactly "
-       "<b>1.000&times;</b> at every size and level, while GHZ star reaches "
-       "<b>3.299&times;</b> on the same hardware &mdash; and the ranking reverses between "
-       "QFT and EfficientSU2.")],
-     "fig4_ghz_chain_vs_star"),
+    ("02", "Interaction structure decides which topology pays",
+     "median over levels 1 and 3, all sizes and seeds &middot; level 0 excluded "
+     "throughout, for the reason given in section 04",
+     [("Shape beats sparsity",
+       "GHZ chain sits at exactly <b>1.000&times;</b> on both maps &mdash; the line "
+       "already <i>is</i> its interaction graph. QFT is cheaper on the line "
+       "(<b>2.321&times;</b> against <b>2.897&times;</b>) while EfficientSU2 is cheaper "
+       "on heavy-hex (<b>2.125&times;</b> against <b>3.427&times;</b>). The ordering "
+       "reverses between two dense circuits on identical hardware.")],
+     "fig12_interaction_structure", False),
 
-    ("03", "Seed variability, stratified by stochastic source",
-     "level 0 has a deterministic layout, so its spread is routing alone; levels 1 and 3 "
-     "add stochastic SabreLayout &middot; worst configuration per family and map, chosen "
-     "independently within each level",
-     [("Routing variability",
-       "Five seeds on QFT / heavy-hex / n = 20 / L0 span <b>5.419&times; to 7.527&times;</b>. "
-       "Level 0 carries the larger relative dispersion despite its deterministic layout "
-       "(p = 2.6&times;10<sup>&minus;6</sup>). A single-seed benchmark would have reported "
-       "any point in that range.")],
-     "fig6_seed_variability"),
+    ("03", "The compiler itself is stochastic",
+     "five fixed transpiler seeds (11, 22, 33, 44, 55) &middot; nothing else about the "
+     "compilation changes between the dots on a row",
+     [("One circuit, five answers",
+       "The widest configuration spans <b>5.419&times; to 7.527&times;</b> on seed choice "
+       "alone. A single-seed benchmark would have reported any point in that range as the "
+       "result."),
+      ("It does not vanish with optimization",
+       "Level 0 carries the larger <i>relative</i> dispersion despite its deterministic "
+       "layout (p = 2.6&times;10<sup>&minus;6</sup>), but spread persists at level 3.")],
+     "fig13_seed_focus", False),
 
-    ("04", "The label-permutation control",
-     "24 deterministically derived relabellings per constrained map &mdash; same graph "
-     "every time, only the numbering changes &middot; SHA-256 derivation, reproducible on "
-     "any platform &middot; 17,280 compilations",
+    ("04", "The control: labelling can dominate the topology effect",
+     "24 deterministically derived relabellings of each constrained map &mdash; same "
+     "graph, same edges, same diameter, only the physical-qubit numbering changes "
+     "&middot; SHA-256 derivation, pinned by digest, reproducible on any platform",
      [("Labelling is a confound, and it is measurable",
-       "Relabelling the same graph moves level-0 results by up to <b>15.70&times;</b>; this "
-       "study's labelling is more favourable than every relabelling tested. At levels 1 and "
-       "3 the spread falls to <b>1.06&ndash;1.23&times;</b> and the QFT / EfficientSU2 "
-       "ranking holds in <b>24 of 24</b>."),
+       "Relabelling the same graph moves level-0 results by up to <b>15.70&times;</b> "
+       "&mdash; about three times the largest topology effect measured anywhere here. "
+       "This study's labelling is more favourable than every relabelling tested."),
+      ("But the topology effect survives",
+       "At levels 1 and 3 the across-labelling spread collapses to "
+       "<b>1.06&ndash;1.23&times;</b>, and the QFT / EfficientSU2 ordering holds in "
+       "<b>24 of 24</b> relabellings. The mechanism is exact: label-invariant wherever "
+       "<code>VF2Layout</code> embeds, <b>28 of 28</b>."),
       ("And one claim did not survive",
-       "GHZ star looked cheap on the line under this study's labelling &mdash; "
-       "<b>1.87&times;</b> at level 3, against a relabelling median of <b>3.99&times;</b>. "
-       "Under relabelling the star is cheaper on heavy-hex in <b>22 of 24</b>. That number "
-       "is reported as labelling, not connectivity.")],
-     "fig11_permutation_sweep"),
+       "GHZ star looked cheap on the line under this labelling &mdash; <b>1.87&times;</b> "
+       "at level 3, against a relabelling median of <b>3.99&times;</b>. Under relabelling "
+       "the star is cheaper on heavy-hex in <b>22 of 24</b>. Reported as labelling, not "
+       "connectivity.")],
+     "fig11_permutation_sweep", True),
 ]
 
 LIMITS = [
     "Compiler-level study, not physical hardware execution.",
-    "One graph per topology class &mdash; heavy-hex results are Cairo's specific 27-node graph.",
+    "One graph per topology class &mdash; heavy-hex is Cairo's specific 27-node graph.",
     "Depends on the tested families, sizes, and the optimization set {0, 1, 3}.",
-    "Compilation runtime is machine- and process-specific.",
     "Five seeds and 24 relabellings characterise, but do not exhaust, either space.",
 ]
 
@@ -113,11 +133,21 @@ stats_html = "".join(
     for v, k in STATS)
 
 
-def section(num, head, cap, findings, figname):
+def section(num, head, cap, findings, figname, fill=False):
     finds = "".join(
         f'<div class="finding"><div class="fhead">{h}</div>'
         f'<div class="fbody">{b}</div></div>'
         for h, b in findings)
+    if fill:
+        # Text as a band above a full-bleed figure: this section is the contribution,
+        # so it takes the page width rather than sharing a row with a sidebar.
+        return f"""
+<div class="srow full">
+  <div class="sechead"><span class="n">{num}</span><h2>{head}</h2>
+    <span class="capinline">{cap}</span></div>
+  <div class="band">{finds}</div>
+  {img(figname, fill=True)}
+</div>"""
     return f"""
 <div class="srow">
   <div class="sside">
@@ -140,102 +170,144 @@ HTML = f"""<!doctype html><html><head><meta charset="utf-8">
 * {{ box-sizing: border-box; margin: 0; padding: 0; }}
 html, body {{ width: 841mm; background: {PAPER}; }}
 body {{ color: {INK}; font-family: 'Source Sans 3', sans-serif;
-        padding: calc(24mm * var(--k)) calc(22mm * var(--k)); }}
+        padding: calc(22mm * var(--k)) calc(20mm * var(--k)); }}
 .fig {{ display: block; }}
-h1 {{ font-size: calc(29mm * var(--k)); line-height: 1.02; font-weight: 700;
-      letter-spacing: calc(-0.55mm * var(--k)); }}
-.sub {{ font-size: calc(12mm * var(--k)); font-weight: 300; color: {INK_SOFT};
+.figfill {{ width: 100%; }}
+
+h1 {{ font-size: calc(30mm * var(--k)); line-height: 1.02; font-weight: 700;
+      letter-spacing: calc(-0.6mm * var(--k)); }}
+.sub {{ font-size: calc(12.5mm * var(--k)); font-weight: 300; color: {INK_SOFT};
         margin-top: calc(3mm * var(--k)); }}
-.byline {{ font-size: calc(8mm * var(--k)); margin-top: calc(5mm * var(--k)); font-weight: 600; }}
+.byline {{ font-size: calc(8mm * var(--k)); margin-top: calc(4mm * var(--k)); font-weight: 600; }}
 .byline span {{ font-weight: 300; color: {INK_SOFT}; }}
-.rule {{ height: calc(0.9mm * var(--k)); background: {INK};
-         margin: calc(6mm * var(--k)) 0 calc(5mm * var(--k)); }}
-.qbar {{ display: flex; gap: calc(9mm * var(--k)); align-items: flex-start; }}
-.q {{ font-size: calc(9.2mm * var(--k)); font-weight: 600; line-height: 1.26; flex: 1.5; }}
-.qnote {{ font-size: calc(6mm * var(--k)); color: {INK_SOFT}; line-height: 1.38; flex: 1;
+
+/* the unexpected result, stated before the reader reaches any figure */
+.flash {{ display: flex; align-items: baseline; gap: calc(6mm * var(--k));
+          margin-top: calc(6mm * var(--k));
+          padding: calc(5.5mm * var(--k)) calc(7mm * var(--k));
+          background: #fff; border: calc(0.9mm * var(--k)) solid {FLAG};
+          border-radius: calc(3mm * var(--k)); }}
+.flash .tag {{ font-size: calc(7.6mm * var(--k)); font-weight: 700; color: {FLAG};
+               letter-spacing: calc(0.3mm * var(--k)); text-transform: uppercase;
+               white-space: nowrap; }}
+.flash .txt {{ font-size: calc(9.4mm * var(--k)); font-weight: 600; line-height: 1.24; }}
+
+.qbar {{ display: flex; gap: calc(9mm * var(--k)); align-items: flex-start;
+         margin-top: calc(6mm * var(--k)); }}
+.q {{ font-size: calc(8.6mm * var(--k)); font-weight: 600; line-height: 1.26; flex: 1.3; }}
+.qnote {{ font-size: calc(6.6mm * var(--k)); color: {INK_SOFT}; line-height: 1.36; flex: 1;
           border-left: calc(0.8mm * var(--k)) solid {RULE};
           padding-left: calc(5.5mm * var(--k)); }}
+
 .stats {{ display: flex; gap: calc(5mm * var(--k)); margin-top: calc(6mm * var(--k)); }}
 .stat {{ flex: 1; border: calc(0.6mm * var(--k)) solid {RULE}; background: #fff;
          padding: calc(4.5mm * var(--k)) calc(5mm * var(--k));
          border-radius: calc(3mm * var(--k)); }}
-.stat .v {{ font-size: calc(11.5mm * var(--k)); font-weight: 700;
+.stat:first-child {{ border-color: {INK}; border-width: calc(1.1mm * var(--k)); }}
+.stat .v {{ font-size: calc(12mm * var(--k)); font-weight: 700;
             letter-spacing: calc(-0.25mm * var(--k)); }}
-.stat .k {{ font-size: calc(5.4mm * var(--k)); color: {INK_SOFT};
-            margin-top: calc(1.4mm * var(--k)); line-height: 1.3; }}
+.stat .k {{ font-size: calc(6.2mm * var(--k)); color: {INK_SOFT};
+            margin-top: calc(1.6mm * var(--k)); line-height: 1.28; }}
 
-/* one section per row: sidebar carries the argument, figure carries the evidence */
-.srow {{ display: flex; gap: calc(23mm * var(--k)); align-items: flex-start;
-         margin-top: calc(17mm * var(--k)); padding-top: calc(6mm * var(--k));
+.srow {{ display: flex; gap: calc(20mm * var(--k)); align-items: flex-start;
+         margin-top: calc(11mm * var(--k)); padding-top: calc(5mm * var(--k));
          border-top: calc(0.6mm * var(--k)) solid {RULE}; }}
+.srow.full {{ display: block; border-top-color: {INK};
+              border-top-width: calc(1.1mm * var(--k)); }}
 .sside {{ width: calc({SIDE_MM}mm * var(--k)); flex: none; }}
 .sfig {{ flex: 1; min-width: 0; }}
 .sechead {{ display: flex; align-items: baseline; gap: calc(4mm * var(--k)); }}
-.sechead .n {{ font-family: 'JetBrains Mono', monospace; font-size: calc(7.2mm * var(--k));
+.sechead .n {{ font-family: 'JetBrains Mono', monospace; font-size: calc(7.6mm * var(--k));
                font-weight: 600; color: {FLAG}; }}
-.sechead h2 {{ font-size: calc(10mm * var(--k)); font-weight: 700; line-height: 1.1;
+.sechead h2 {{ font-size: calc(10.6mm * var(--k)); font-weight: 700; line-height: 1.1;
                letter-spacing: calc(-0.2mm * var(--k)); }}
-.cap {{ font-size: calc(6.1mm * var(--k)); color: {INK_SOFT}; font-weight: 300;
-        line-height: 1.32; margin-top: calc(3.2mm * var(--k));
-        padding-bottom: calc(4.5mm * var(--k));
+.capinline {{ font-size: calc(7.2mm * var(--k)); color: {INK_SOFT}; font-weight: 300;
+              line-height: 1.3; margin-left: auto; max-width: calc(400mm * var(--k));
+              text-align: right; }}
+.cap {{ font-size: calc(8.0mm * var(--k)); color: {INK_SOFT}; font-weight: 300;
+        line-height: 1.3; margin-top: calc(3mm * var(--k));
+        padding-bottom: calc(4mm * var(--k));
         border-bottom: calc(0.6mm * var(--k)) solid {RULE}; }}
-.finding {{ margin-top: calc(5mm * var(--k)); }}
-.fhead {{ font-size: calc(8.2mm * var(--k)); font-weight: 700; line-height: 1.14;
-          margin-bottom: calc(1.8mm * var(--k)); }}
-.fbody {{ font-size: calc(7.1mm * var(--k)); line-height: 1.36; }}
+.finding {{ margin-top: calc(4.5mm * var(--k)); }}
+.fhead {{ font-size: calc(10.6mm * var(--k)); font-weight: 700; line-height: 1.14;
+          margin-bottom: calc(1.6mm * var(--k)); }}
+.fbody {{ font-size: calc(9.7mm * var(--k)); line-height: 1.34; }}
+.band {{ display: flex; gap: calc(11mm * var(--k));
+         margin: calc(4.5mm * var(--k)) 0 calc(1mm * var(--k)); }}
+.band .finding {{ flex: 1; margin-top: 0; }}
 
-.foot {{ display: flex; gap: calc(8mm * var(--k)); margin-top: calc(14mm * var(--k));
-         padding-top: calc(5mm * var(--k)); border-top: calc(0.9mm * var(--k)) solid {INK}; }}
-.foot h3 {{ font-size: calc(6.4mm * var(--k)); font-weight: 700;
-            margin-bottom: calc(2.2mm * var(--k)); }}
-.foot li {{ font-size: calc(5.2mm * var(--k)); line-height: 1.38; color: {INK_SOFT};
+.concl {{ margin-top: calc(10mm * var(--k));
+          padding: calc(6mm * var(--k)) calc(8mm * var(--k));
+          background: {INK}; color: {PAPER}; border-radius: calc(3mm * var(--k));
+          font-size: calc(8.8mm * var(--k)); line-height: 1.3; font-weight: 600; }}
+.concl b {{ color: #7FD8E4; }}
+.concl .lab {{ display: block; font-size: calc(6mm * var(--k)); font-weight: 700;
+               letter-spacing: calc(0.4mm * var(--k)); text-transform: uppercase;
+               color: #9AA3B8; margin-bottom: calc(2.4mm * var(--k)); }}
+
+.foot {{ display: flex; gap: calc(8mm * var(--k)); margin-top: calc(8mm * var(--k));
+         padding-top: calc(4.5mm * var(--k));
+         border-top: calc(0.6mm * var(--k)) solid {RULE}; }}
+.foot h3 {{ font-size: calc(6.6mm * var(--k)); font-weight: 700;
+            margin-bottom: calc(2mm * var(--k)); }}
+.foot li {{ font-size: calc(5.6mm * var(--k)); line-height: 1.34; color: {INK_SOFT};
             margin-left: calc(5mm * var(--k)); }}
-.foot p {{ font-size: calc(5.2mm * var(--k)); line-height: 1.42; color: {INK_SOFT}; }}
+.foot p {{ font-size: calc(5.6mm * var(--k)); line-height: 1.38; color: {INK_SOFT}; }}
 code {{ font-family: 'JetBrains Mono', monospace; font-size: 0.94em; }}
-.qr {{ width: calc(31mm * var(--k)); }}
-.scope {{ background: #fff; border: calc(0.6mm * var(--k)) solid {FLAG};
-          border-radius: calc(3mm * var(--k)); padding: calc(4mm * var(--k));
-          font-size: calc(5.4mm * var(--k)); line-height: 1.38; }}
-.scope b {{ color: {FLAG}; }}
+.qr {{ width: calc(46mm * var(--k)); }}
 </style></head><body>
 
 <h1>Quantifying Routing Overhead in Quantum Circuit Compilation</h1>
-<div class="sub">A controlled comparison of hardware topologies &mdash; and of the labelling hiding inside one</div>
+<div class="sub">A controlled comparison of hardware topology and the hidden effect of physical-qubit labelling</div>
 <div class="byline">Jos&eacute; Andr&eacute;s Auy&oacute;n C&oacute;bar<span>&nbsp;&nbsp;&middot;&nbsp;&nbsp;Universidad del Valle de Guatemala&nbsp;&nbsp;&middot;&nbsp;&nbsp;WEH Quantum Science and Technology Seminar</span></div>
-<div class="rule"></div>
+
+<div class="flash">
+  <span class="tag">Unexpected result</span>
+  <span class="txt">Physical-qubit labelling can dominate the apparent topology effect.
+  Relabelling the <i>same</i> graph moves optimization-level-0 results by up to
+  <b>15.70&times;</b> &mdash; and one of this study's own conclusions did not survive the
+  control.</span>
+</div>
 
 <div class="qbar">
   <div class="q">How much does restricted qubit connectivity inflate compiled quantum
   circuits, which interaction patterns are most sensitive to hardware topology &mdash; and
   how much of the measured effect is connectivity rather than how the physical qubits
   happen to be numbered?</div>
-  <div class="qnote">A compiler study, not a physics demonstration. It measures compiler
-  output under modeled connectivity constraints; it does not measure QPU fidelity and makes
-  no quantum-advantage claim. <b>1,080 canonical compilations</b> plus <b>20,040</b> in a
-  label-permutation control, all under Qiskit 2.5.1. Four circuit families &times; six
-  logical sizes (4&ndash;24) &times; three topologies at 27 physical qubits &times; three
-  optimization levels &times; five fixed seeds, with circuit, basis, level and seed held
-  fixed while connectivity varies.</div>
+  <div class="qnote">A compiler study, not a physics demonstration: it measures compiler
+  output under modelled connectivity constraints, not QPU fidelity, and makes no
+  quantum-advantage claim.<br><br>
+  <b>1,080 canonical compilations</b> &mdash; 4 circuit families &times; 6 sizes
+  (4&ndash;24) &times; 3 topologies at 27 physical qubits &times; 3 optimization levels
+  &times; 5 fixed seeds &mdash; plus <b>20,040 in the control</b>: 17,280 relabelling
+  sweep + 1,800 matched baselines + 960 <code>VF2Layout</code> instrumentation. All under
+  Qiskit 2.5.1.</div>
 </div>
 
 <div class="stats">{stats_html}</div>
 {sections_html}
 
+<div class="concl"><span class="lab">Conclusion</span>
+Restricted connectivity does impose measurable routing overhead &mdash; <b>2.140&times;</b> on
+the line and <b>2.304&times;</b> on heavy-hex &mdash; but compiler behaviour can confound
+topology with physical-qubit labelling. Once the level-0 labelling effect is separated out the
+topology penalty remains, and its circuit-structure ordering holds in <b>24 of 24</b>
+relabellings, while some circuit-specific conclusions become more nuanced.</div>
+
 <div class="foot">
-  <div style="flex:1.05"><h3>Limitations</h3><ul>{limits_html}</ul></div>
-  <div style="flex:1.05"><h3>Methodological integrity</h3>
-    <div class="scope"><b>Level 0 measures labelling, not connectivity.</b> Relabelling the
-    same graph moves it by up to 15.70&times; &mdash; about three times the largest topology
-    effect measured anywhere here &mdash; so no level-0 number carries a topology claim.
-    Where an exact embedding exists the result is label-invariant, <b>28 of 28</b>; every
-    systematic shift falls where <code>VF2Layout</code> fails, <b>15 of 15</b>. No
-    exceptions in either direction.</div></div>
-  <div style="flex:0.95; display:flex; gap:calc(5mm * var(--k)); align-items:flex-start">
+  <div style="flex:1"><h3>Limitations</h3><ul>{limits_html}</ul></div>
+  <div style="flex:1"><h3>Where level 0 stands</h3>
+    <p>Level 0 is a declared Qiskit preset and no stored value is changed, but it pins the
+    layout to the identity permutation, so it measures numbering as much as connectivity.
+    Every topology claim on this poster excludes it. Where an exact embedding exists the
+    result is label-invariant, <b>28 of 28</b>; every systematic shift falls where
+    <code>VF2Layout</code> fails, <b>15 of 15</b>. No exceptions in either direction.</p></div>
+  <div style="flex:1; display:flex; gap:calc(5mm * var(--k)); align-items:flex-start">
     <div><h3>Reproducible benchmark</h3>
-      <p>Python 3.12 &middot; Qiskit 2.5.1 &middot; fixed seeds 11, 22, 33, 44, 55 &middot;
-      locked dependencies. Recompiling all 1,080 canonical points reproduced the stored
-      metrics <b>exactly, 1,080 of 1,080</b>. Sweep conditions derive from a SHA-256
-      keystream, pinned by digest in the test suite.</p>
+      <p>Python 3.12 &middot; Qiskit 2.5.1 &middot; fixed seeds &middot; locked
+      dependencies. Recompiling all 1,080 canonical points reproduced the stored metrics
+      <b>exactly, 1,080 of 1,080</b>. Sweep conditions derive from a SHA-256 keystream,
+      pinned by digest in the test suite.</p>
       <p style="margin-top:calc(2.2mm * var(--k))"><code>github.com/auyjos/quantum-routing-overhead</code></p>
     </div>
     <img class="qr" src="data:image/png;base64,{b64("fig9_repository_qr")}">
@@ -246,3 +318,43 @@ code {{ font-family: 'JetBrains Mono', monospace; font-size: 0.94em; }}
 
 pathlib.Path("poster_a0.html").write_text(HTML, encoding="utf-8")
 print("wrote poster_a0.html", len(HTML) // 1024, "KB")
+
+# --- Canva import variant -----------------------------------------------------
+# Two differences from the print build. The fitted --k is baked in as a literal, because
+# Canva's importer has no notion of the fitting pass. And every figure is referenced by
+# its public URL rather than inlined as base64, so Canva ingests each one as a real image
+# asset that can be selected, moved and swapped -- an inlined data URI would arrive as an
+# opaque blob, and would make the file 2 MB instead of 20 kB.
+CANVA_BASE = ("https://raw.githubusercontent.com/auyjos/quantum-routing-overhead/"
+              "master/output/canva/figures")
+CANVA_FIGS = [name for *_, name, _ in SECTIONS] + ["fig9_repository_qr"]
+
+scale = pathlib.Path("poster_scale.txt")
+if scale.exists():
+    k = scale.read_text().strip()
+    canva = HTML.replace(":root { --k: 1; }", f":root {{ --k: {k}; }}")
+    for name in CANVA_FIGS:
+        inlined = f'src="data:image/png;base64,{b64(name)}"'
+        assert inlined in canva, f"no inlined copy of {name} to swap for a URL"
+        canva = canva.replace(inlined, f'src="{CANVA_BASE}/{name}.png"')
+    canva = canva.replace("<body>", (
+        '<body>\n<div data-document-role="page" '
+        'data-label="Routing overhead in quantum circuit compilation" '
+        'style="width:841mm; min-height:1189mm; box-sizing:border-box; '
+        'padding:calc(22mm * var(--k)) calc(20mm * var(--k)); background:'
+        + PAPER + ';">'))
+    canva = canva.replace("</body>", "</div>\n</body>")
+    # the wrapper carries the page padding instead of body, so Canva measures one page
+    canva = canva.replace("body { color:", "body { padding: 0 !important; } body { color:")
+    pathlib.Path("poster_canva.html").write_text(canva, encoding="utf-8")
+    print("wrote poster_canva.html", max(1, len(canva) // 1024), "KB  (--k", k,
+          "· figures by URL)")
+
+    figdir = pathlib.Path("canva_figures")
+    figdir.mkdir(exist_ok=True)
+    for name in CANVA_FIGS:
+        src = FIGS_POSTER / f"{name}.png"
+        if not src.exists():
+            src = FIGS / f"{name}.png"
+        (figdir / f"{name}.png").write_bytes(src.read_bytes())
+    print("staged", len(CANVA_FIGS), "figures in canva_figures/ for output/canva/figures/")

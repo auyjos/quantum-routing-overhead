@@ -87,7 +87,10 @@ def strip(ax, left=True, bottom=True, grid_axis="y"):
 def save(fig, name, outdir="figs"):
     import os
     os.makedirs(outdir, exist_ok=True)
-    for ext, dpi in (("png", 220),):
+    # Poster figures are printed larger than their native size, so they are rasterised
+    # finer: a figure shown at 1.5x its native width would otherwise fall under 150 dpi
+    # at A0, which is visible as soft type on a printed poster.
+    for ext, dpi in (("png", 300 if POSTER else 220),):
         fig.savefig(f"{outdir}/{name}.{ext}", dpi=dpi, bbox_inches="tight",
                     pad_inches=0.28, facecolor=PAPER)
     fig.savefig(f"{outdir}/{name}.svg", bbox_inches="tight",
